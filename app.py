@@ -6,7 +6,7 @@ from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__, static_folder='static')
 
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres:Qgsistemas2026!@db.oivclhmawflchbkusaab.supabase.co:5432/postgres')
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres.oivclhmawflchbkusaab:Qgsistemas2026!@aws-1-eu-central-1.pooler.supabase.com:6543/postgres')
 
 WAREHOUSES = ['culiacan', 'cdmx', 'oax']
 
