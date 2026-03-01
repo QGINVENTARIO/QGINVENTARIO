@@ -1,37 +1,46 @@
 from flask import Flask, request, jsonify, send_from_directory
 import json, os, openpyxl
 from datetime import datetime
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 app = Flask(__name__, static_folder='static')
 
-DATA_DIR = 'data'
-os.makedirs(DATA_DIR, exist_ok=True)
+DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres:Qgsistemas2026!@db.oivclhmawflchbkusaab.supabase.co:5432/postgres')
 
 WAREHOUSES = ['culiacan', 'cdmx', 'oax']
 
-def data_file(warehouse):
-    return f'{DATA_DIR}/inventory_{warehouse}.json'
+def get_conn():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
-def load_data(warehouse):
-    f = data_file(warehouse)
-    if os.path.exists(f):
-        with open(f, 'r', encoding='utf-8') as fp:
-            return json.load(fp)
-    seed_file = 'products_seed.json'
-    if os.path.exists(seed_file):
-        with open(seed_file, 'r', encoding='utf-8') as fp:
-            products = json.load(fp)
-    else:
-        products = []
-    return {
-        'products': {p['name']: {'cat': p['cat'], 'min_stock': 0} for p in products},
-        'snapshots': {},
-        'min_stocks': {}
-    }
+def init_db():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS products (
+            id SERIAL PRIMARY KEY,
+            warehouse TEXT NOT NULL,
+            name TEXT NOT NULL,
+            cat TEXT DEFAULT 'Otros',
+            min_stock REAL DEFAULT 0,
+            UNIQUE(warehouse, name)
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS snapshots (
+            id SERIAL PRIMARY KEY,
+            warehouse TEXT NOT NULL,
+            report_date TEXT NOT NULL,
+            product_name TEXT NOT NULL,
+            total REAL NOT NULL,
+            UNIQUE(warehouse, report_date, product_name)
+        )
+    ''')
+    conn.commit()
+    cur.close()
+    conn.close()
 
-def save_data(warehouse, data):
-    with open(data_file(warehouse), 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+init_db()
 
 def parse_excel(file_stream):
     wb = openpyxl.load_workbook(file_stream, data_only=True)
@@ -95,16 +104,26 @@ def upload():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     
-    data = load_data(warehouse)
+    conn = get_conn()
+    cur = conn.cursor()
     
     for name, info in parsed.items():
-        if name not in data['products']:
-            data['products'][name] = {'cat': info['cat'], 'min_stock': 0}
+        cur.execute('''
+            INSERT INTO products (warehouse, name, cat, min_stock)
+            VALUES (%s, %s, %s, 0)
+            ON CONFLICT (warehouse, name) DO UPDATE SET cat = EXCLUDED.cat
+        ''', (warehouse, name, info['cat']))
+        
+        cur.execute('''
+            INSERT INTO snapshots (warehouse, report_date, product_name, total)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (warehouse, report_date, product_name) DO UPDATE SET total = EXCLUDED.total
+        ''', (warehouse, report_date, name, info['total']))
     
-    snapshot = {name: info['total'] for name, info in parsed.items()}
-    data['snapshots'][report_date] = snapshot
+    conn.commit()
+    cur.close()
+    conn.close()
     
-    save_data(warehouse, data)
     return jsonify({'ok': True, 'date': report_date, 'count': len(parsed)})
 
 @app.route('/api/dashboard')
@@ -113,11 +132,15 @@ def dashboard():
     if warehouse not in WAREHOUSES:
         return jsonify({'error': 'Invalid warehouse'}), 400
 
-    data = load_data(warehouse)
-    snapshots = data['snapshots']
-    products_meta = data['products']
+    conn = get_conn()
+    cur = conn.cursor()
     
-    if not snapshots:
+    cur.execute('SELECT DISTINCT report_date FROM snapshots WHERE warehouse = %s', (warehouse,))
+    dates_rows = cur.fetchall()
+    
+    if not dates_rows:
+        cur.close()
+        conn.close()
         return jsonify({'products': [], 'has_data': False})
     
     def parse_date(d):
@@ -127,22 +150,35 @@ def dashboard():
         except:
             return (0,0,0)
     
-    sorted_dates = sorted(snapshots.keys(), key=parse_date)
+    sorted_dates = sorted([r['report_date'] for r in dates_rows], key=parse_date)
     latest_date = sorted_dates[-1]
-    latest = snapshots[latest_date]
+    
+    cur.execute('SELECT product_name, total FROM snapshots WHERE warehouse = %s AND report_date = %s', (warehouse, latest_date))
+    latest = {r['product_name']: r['total'] for r in cur.fetchall()}
+    
+    cur.execute('SELECT name, cat, min_stock FROM products WHERE warehouse = %s', (warehouse,))
+    products_meta = {r['name']: {'cat': r['cat'], 'min_stock': r['min_stock']} for r in cur.fetchall()}
     
     avg_consumption = {}
     for i in range(1, len(sorted_dates)):
         prev_date = sorted_dates[i-1]
         curr_date = sorted_dates[i]
-        prev = snapshots[prev_date]
-        curr = snapshots[curr_date]
+        
+        cur.execute('SELECT product_name, total FROM snapshots WHERE warehouse = %s AND report_date = %s', (warehouse, prev_date))
+        prev = {r['product_name']: r['total'] for r in cur.fetchall()}
+        
+        cur.execute('SELECT product_name, total FROM snapshots WHERE warehouse = %s AND report_date = %s', (warehouse, curr_date))
+        curr = {r['product_name']: r['total'] for r in cur.fetchall()}
+        
         for name in curr:
             if name in prev and prev[name] > curr[name]:
                 consumed = prev[name] - curr[name]
                 if name not in avg_consumption:
                     avg_consumption[name] = []
                 avg_consumption[name].append(consumed)
+    
+    cur.close()
+    conn.close()
     
     result = []
     for name, total in latest.items():
@@ -185,12 +221,18 @@ def dashboard():
 def set_min_stock():
     body = request.json
     warehouse = body.get('warehouse', 'culiacan')
-    data = load_data(warehouse)
     name = body.get('name')
     value = body.get('value', 0)
-    if name in data['products']:
-        data['products'][name]['min_stock'] = value
-        save_data(warehouse, data)
+    
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute('''
+        UPDATE products SET min_stock = %s WHERE warehouse = %s AND name = %s
+    ''', (float(value) or 0, warehouse, name))
+    conn.commit()
+    cur.close()
+    conn.close()
+    
     return jsonify({'ok': True})
 
 if __name__ == '__main__':
