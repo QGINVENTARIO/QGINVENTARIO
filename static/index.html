@@ -4,149 +4,191 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control de Inventario · QG Sistemas</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1117; --surface: #181c27; --surface2: #1e2332;
-    --border: #2a3045; --text: #e8eaf0; --muted: #6b7394;
-    --green: #22c55e; --yellow: #f59e0b; --red: #ef4444;
-    --accent: #6366f1;
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #d0d5dd;
+    --border-light: #e4e7ec;
+    --text: #101828;
+    --muted: #667085;
+    --green: #027a48;
+    --green-bg: #ecfdf3;
+    --green-border: #abefc6;
+    --yellow: #b54708;
+    --yellow-bg: #fffaeb;
+    --yellow-border: #fedf89;
+    --red: #b42318;
+    --red-bg: #fef3f2;
+    --red-border: #fecdca;
+    --accent: #2563eb;
+    --accent-light: #eff6ff;
+    --header-bg: #1e3a5f;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
 
   header {
-    border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;
+    background: var(--header-bg);
+    padding: 0.75rem 1.5rem;
     display: flex; align-items: center; justify-content: space-between;
-    background: var(--surface); position: sticky; top: 0; z-index: 100;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   }
-  .logo { font-size: 1rem; font-weight: 800; }
-  .logo span { color: var(--accent); }
-  #report-date { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
+  .logo { font-size: 0.95rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+  .logo span { color: #93c5fd; }
+  #report-date { font-size: 0.72rem; color: #93c5fd; }
 
-  /* Warehouse selector */
   .warehouse-bar {
-    background: var(--surface2); border-bottom: 1px solid var(--border);
-    padding: 0.6rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1.5rem;
+    display: flex; align-items: center; gap: 0.5rem;
   }
-  .warehouse-bar span { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); margin-right: 0.5rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .warehouse-bar span { font-size: 0.72rem; color: var(--muted); margin-right: 0.4rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
   .wh-btn {
-    padding: 0.3rem 1rem; border-radius: 20px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-family: 'DM Mono', monospace;
-    font-size: 0.72rem; cursor: pointer; transition: all 0.15s;
+    padding: 0.3rem 1rem; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted);
+    font-family: 'Inter', sans-serif; font-size: 0.75rem;
+    cursor: pointer; transition: all 0.15s; font-weight: 500;
   }
-  .wh-btn:hover { border-color: var(--accent); color: var(--text); }
-  .wh-btn.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 700; }
+  .wh-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .wh-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
 
-  .main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+  .main { padding: 1.25rem 1.5rem; max-width: 1400px; margin: 0 auto; }
 
-  /* Upload */
   .upload-zone {
-    border: 2px dashed var(--border); border-radius: 12px; padding: 2.5rem;
+    border: 1.5px dashed var(--border);
+    border-radius: 8px; padding: 1.5rem;
     text-align: center; cursor: pointer; transition: all 0.2s;
-    margin-bottom: 1.5rem; background: var(--surface);
+    margin-bottom: 1.25rem; background: var(--surface);
   }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: #1a1e2e; }
-  .upload-zone h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
-  .upload-zone p { color: var(--muted); font-size: 0.82rem; font-family: 'DM Mono', monospace; }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-light); }
+  .upload-zone h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text); }
+  .upload-zone p { color: var(--muted); font-size: 0.78rem; }
   .upload-zone input { display: none; }
   .upload-btn {
-    display: inline-block; margin-top: 1rem; padding: 0.55rem 1.3rem;
-    background: var(--accent); border-radius: 6px; font-size: 0.82rem;
-    font-weight: 700; cursor: pointer; color: white; border: none;
+    display: inline-block; margin-top: 0.75rem; padding: 0.45rem 1.1rem;
+    background: var(--accent); border-radius: 6px; font-size: 0.78rem;
+    font-weight: 600; cursor: pointer; color: white; border: none;
   }
-  #upload-status { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-top: 0.6rem; }
+  .upload-btn:hover { background: #1d4ed8; }
+  #upload-status { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
 
-  /* Summary */
-  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
-  .card-label { font-size: 0.68rem; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
-  .card-value { font-size: 1.9rem; font-weight: 800; line-height: 1; }
-  .card-value.red { color: var(--red); } .card-value.yellow { color: var(--yellow); } .card-value.green { color: var(--green); }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.85rem 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .card-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; font-weight: 500; }
+  .card-value { font-size: 1.7rem; font-weight: 700; line-height: 1; color: var(--text); }
+  .card-value.red { color: var(--red); }
+  .card-value.yellow { color: var(--yellow); }
+  .card-value.green { color: var(--green); }
 
   .history-badge {
-    display: inline-block; padding: 0.5rem 1rem; border-radius: 6px;
-    background: var(--surface); border: 1px solid var(--border);
-    font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted);
-    margin-bottom: 1.5rem;
+    display: inline-block; padding: 0.4rem 0.85rem; border-radius: 6px;
+    background: var(--accent-light); border: 1px solid #bfdbfe;
+    font-size: 0.72rem; color: var(--accent); margin-bottom: 1.25rem; font-weight: 500;
   }
-  .history-badge strong { color: var(--accent); }
 
-  .controls { display: flex; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
-  .filter-btn {
-    padding: 0.35rem 0.9rem; border-radius: 20px; border: 1px solid var(--border);
-    background: transparent; color: var(--muted); font-family: 'DM Mono', monospace;
-    font-size: 0.72rem; cursor: pointer; transition: all 0.15s;
+  .controls {
+    display: flex; gap: 0.5rem; margin-bottom: 0.75rem;
+    flex-wrap: wrap; align-items: center;
+    background: var(--surface); padding: 0.6rem 0.85rem;
+    border-radius: 8px; border: 1px solid var(--border);
   }
-  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn {
+    padding: 0.28rem 0.75rem; border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted);
+    font-family: 'Inter', sans-serif; font-size: 0.72rem;
+    cursor: pointer; transition: all 0.15s; font-weight: 500;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
   .search-box {
-    padding: 0.35rem 0.9rem; border-radius: 20px; border: 1px solid var(--border);
-    background: var(--surface); color: var(--text); font-family: 'DM Mono', monospace;
-    font-size: 0.72rem; width: 200px; outline: none;
+    padding: 0.28rem 0.75rem; border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--surface); color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 0.72rem;
+    width: 180px; outline: none;
   }
-  .search-box:focus { border-color: var(--accent); }
+  .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .edit-mins-btn {
+    margin-left: auto; padding: 0.28rem 0.75rem; border-radius: 5px;
+    border: 1px solid var(--accent); background: var(--accent-light);
+    color: var(--accent); font-family: 'Inter', sans-serif;
+    font-size: 0.72rem; cursor: pointer; font-weight: 500;
+  }
 
-  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
-  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .table-wrap {
+    overflow-x: auto; border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    background: var(--surface);
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
   thead { background: var(--surface2); }
   thead th {
-    padding: 0.65rem 0.9rem; text-align: left; font-family: 'DM Mono', monospace;
-    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); white-space: nowrap;
+    padding: 0.6rem 0.85rem; text-align: left;
+    font-size: 0.68rem; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted);
+    white-space: nowrap; font-weight: 600;
+    border-bottom: 1px solid var(--border);
   }
-  tbody tr { border-top: 1px solid var(--border); transition: background 0.1s; }
-  tbody tr:hover { background: var(--surface); }
-  td { padding: 0.6rem 0.9rem; vertical-align: middle; }
-  td.name { font-weight: 600; max-width: 300px; font-size: 0.78rem; }
-  td.mono { font-family: 'DM Mono', monospace; font-size: 0.75rem; }
+  tbody tr { border-top: 1px solid var(--border-light); transition: background 0.1s; }
+  tbody tr:hover { background: #f8faff; }
+  td { padding: 0.55rem 0.85rem; vertical-align: middle; }
+  td.name { font-weight: 600; max-width: 300px; color: var(--text); }
+  td.mono { font-family: 'Inter', monospace; color: var(--text); }
 
   .cat-badge {
-    display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px;
-    font-family: 'DM Mono', monospace; font-size: 0.62rem;
-    background: var(--surface2); color: var(--muted); white-space: nowrap;
+    display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px;
+    font-size: 0.65rem; background: var(--surface2);
+    color: var(--muted); white-space: nowrap; font-weight: 500;
+    border: 1px solid var(--border-light);
   }
 
-  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-  .dot.green { background: var(--green); box-shadow: 0 0 5px var(--green); }
-  .dot.yellow { background: var(--yellow); box-shadow: 0 0 5px var(--yellow); }
-  .dot.red { background: var(--red); box-shadow: 0 0 5px var(--red); animation: pulse 1.5s infinite; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .status-dot.green { background: #16a34a; }
+  .status-dot.yellow { background: #d97706; }
+  .status-dot.red { background: #dc2626; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
   .order-flag {
-    display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.18rem 0.45rem;
-    border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 0.25rem;
+    padding: 0.15rem 0.5rem; border-radius: 4px;
+    font-size: 0.65rem; font-weight: 600;
   }
-  .order-flag.urgent { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
-  .order-flag.soon { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
-  .order-flag.ok { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+  .order-flag.urgent { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .order-flag.soon { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+  .order-flag.ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
 
   .days-bar { display: flex; align-items: center; gap: 0.4rem; }
-  .bar-bg { height: 3px; width: 60px; border-radius: 2px; background: var(--border); overflow: hidden; }
+  .bar-bg { height: 4px; width: 55px; border-radius: 2px; background: var(--border-light); overflow: hidden; }
   .bar-fill { height: 100%; border-radius: 2px; }
 
   .min-input {
-    width: 65px; padding: 0.18rem 0.35rem; background: var(--surface2);
-    border: 1px solid var(--border); border-radius: 4px; color: var(--text);
-    font-family: 'DM Mono', monospace; font-size: 0.72rem; text-align: right;
+    width: 65px; padding: 0.2rem 0.35rem;
+    background: white; border: 1px solid var(--border);
+    border-radius: 4px; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 0.75rem; text-align: right;
   }
-  .min-input:focus { outline: none; border-color: var(--accent); }
-
-  .edit-mins-btn {
-    margin-left: auto; padding: 0.35rem 0.9rem; border-radius: 20px;
-    border: 1px solid var(--accent); background: transparent; color: var(--accent);
-    font-family: 'DM Mono', monospace; font-size: 0.72rem; cursor: pointer;
-  }
+  .min-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
 
   .no-data {
-    text-align: center; padding: 4rem 2rem; color: var(--muted);
-    font-family: 'DM Mono', monospace; font-size: 0.85rem;
+    text-align: center; padding: 3rem 2rem;
+    color: var(--muted); font-size: 0.85rem;
   }
-  .no-data h3 { color: var(--text); font-size: 1.2rem; margin-bottom: 0.5rem; }
 
   @media (max-width: 600px) {
-    .controls { gap: 0.4rem; }
-    .filter-btn { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
-    td.name { max-width: 160px; }
+    .main { padding: 1rem; }
+    td.name { max-width: 140px; }
   }
 </style>
 </head>
@@ -169,7 +211,7 @@
   <div class="upload-zone" id="drop-zone">
     <h2>📂 Cargar reporte diario</h2>
     <p id="upload-wh-label">Almacén: <strong>Culiacán</strong></p>
-    <p style="margin-top:0.3rem">Arrastra el archivo Excel aquí, o haz clic para seleccionar</p>
+    <p style="margin-top:0.25rem;color:var(--muted)">Arrastra el archivo Excel aquí, o haz clic para seleccionar</p>
     <label class="upload-btn">
       Seleccionar archivo
       <input type="file" id="file-input" accept=".xlsx,.xls">
@@ -179,7 +221,7 @@
 
   <div id="dashboard">
     <div class="summary-grid" id="summary-cards">
-      <div class="card"><div class="card-label">Cargando...</div><div class="card-value" style="color:var(--muted)">—</div></div>
+      <div class="card"><div class="card-label">Cargando...</div><div class="card-value">—</div></div>
     </div>
 
     <div id="history-info" class="history-badge" style="display:none"></div>
@@ -194,7 +236,7 @@
       <button class="filter-btn" data-filter="Blanco">Blanco</button>
       <button class="filter-btn" data-filter="Greenpro">Greenpro</button>
       <button class="filter-btn" data-filter="Rafia">Rafia</button>
-      <input class="search-box" id="search" placeholder="Buscar...">
+      <input class="search-box" id="search" placeholder="🔍 Buscar producto...">
       <button class="edit-mins-btn" id="edit-mins-btn">⚙ Editar mínimos</button>
     </div>
 
@@ -234,7 +276,7 @@ async function loadDashboard() {
   const data = await res.json();
   if (!data.has_data) {
     document.getElementById('report-date').textContent = 'Sin datos';
-    document.getElementById('summary-cards').innerHTML = `<div class="card"><div class="card-label">Sin datos</div><div class="card-value" style="color:var(--muted)">—</div></div>`;
+    document.getElementById('summary-cards').innerHTML = `<div class="card"><div class="card-label">Sin datos</div><div class="card-value">—</div></div>`;
     document.getElementById('history-info').style.display = 'none';
     document.getElementById('table-body').innerHTML = '<tr><td colspan="7" class="no-data">Carga el primer reporte para comenzar</td></tr>';
     return;
@@ -257,11 +299,11 @@ function renderSummary() {
   const counts = { urgente: 0, pronto: 0, ok: 0, sin_datos: 0 };
   allData.forEach(p => counts[p.status] = (counts[p.status] || 0) + 1);
   document.getElementById('summary-cards').innerHTML = `
-    <div class="card"><div class="card-label">Total</div><div class="card-value">${allData.length}</div></div>
+    <div class="card"><div class="card-label">Total productos</div><div class="card-value">${allData.length}</div></div>
     <div class="card"><div class="card-label">🔴 Urgente</div><div class="card-value red">${counts.urgente}</div></div>
-    <div class="card"><div class="card-label">🟡 Pronto</div><div class="card-value yellow">${counts.pronto}</div></div>
-    <div class="card"><div class="card-label">🟢 OK</div><div class="card-value green">${counts.ok}</div></div>
-    <div class="card"><div class="card-label">Sin datos</div><div class="card-value" style="color:var(--muted)">${counts.sin_datos}</div></div>
+    <div class="card"><div class="card-label">🟡 Pedir pronto</div><div class="card-value yellow">${counts.pronto}</div></div>
+    <div class="card"><div class="card-label">🟢 Stock OK</div><div class="card-value green">${counts.ok}</div></div>
+    <div class="card"><div class="card-label">Sin historial</div><div class="card-value" style="color:var(--muted)">${counts.sin_datos}</div></div>
   `;
 }
 
@@ -274,34 +316,35 @@ function renderTable() {
 
   const tbody = document.getElementById('table-body');
   if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);font-family:\'DM Mono\',monospace;">Sin resultados</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="no-data">Sin resultados</td></tr>';
     return;
   }
 
   tbody.innerHTML = filtered.map(p => {
     const dotColor = p.status === 'urgente' ? 'red' : p.status === 'pronto' ? 'yellow' : p.status === 'ok' ? 'green' : '';
+    const dotEl = dotColor ? `<span class="status-dot ${dotColor}"></span>` : '';
     const barPct = p.days ? Math.min(100, (p.days / 180) * 100) : 0;
-    const barColor = p.status === 'urgente' ? '#ef4444' : p.status === 'pronto' ? '#f59e0b' : '#22c55e';
+    const barColor = p.status === 'urgente' ? '#dc2626' : p.status === 'pronto' ? '#d97706' : '#16a34a';
     const orderFlag = p.status === 'urgente'
       ? '<span class="order-flag urgent">⚠ PEDIR YA</span>'
       : p.status === 'pronto'
       ? '<span class="order-flag soon">↑ Pedir pronto</span>'
       : p.status === 'ok'
       ? '<span class="order-flag ok">✓ OK</span>'
-      : `<span style="color:var(--muted);font-size:0.65rem;font-family:'DM Mono',monospace;">Más datos</span>`;
+      : `<span style="color:var(--muted);font-size:0.65rem;">Sin historial</span>`;
 
     const minCell = editMode
       ? `<input class="min-input" type="number" value="${p.min_stock}" onchange="updateMin('${p.name.replace(/'/g,"\\'")}', this.value)">`
       : `<span class="mono">${p.min_stock || '—'}</span>`;
 
     return `<tr>
-      <td class="name">${p.name}</td>
+      <td class="name">${dotEl}${p.name}</td>
       <td><span class="cat-badge">${p.cat}</span></td>
       <td class="mono">${p.total.toLocaleString('es-MX')}</td>
       <td>${minCell}</td>
       <td>
         <div class="days-bar">
-          <span class="mono" style="min-width:36px">${p.days !== null ? p.days : '—'}</span>
+          <span class="mono" style="min-width:32px">${p.days !== null ? p.days : '—'}</span>
           <div class="bar-bg"><div class="bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>
         </div>
       </td>
@@ -340,7 +383,6 @@ async function uploadFile(file) {
   }
 }
 
-// Warehouse switcher
 document.querySelectorAll('.wh-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.wh-btn').forEach(b => b.classList.remove('active'));
