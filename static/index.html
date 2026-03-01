@@ -37,26 +37,41 @@
     position: sticky; top: 0; z-index: 100;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   }
-  .logo { font-size: 0.95rem; font-weight: 700; color: white; letter-spacing: 0.02em; }
+  .logo { font-size: 0.95rem; font-weight: 700; color: white; }
   .logo span { color: #93c5fd; }
-  #report-date { font-size: 0.72rem; color: #93c5fd; }
 
-  .warehouse-bar {
+  /* Status bar */
+  .status-bar {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
-    padding: 0.5rem 1.5rem;
-    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.6rem 1.5rem;
+    display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;
   }
-  .warehouse-bar span { font-size: 0.72rem; color: var(--muted); margin-right: 0.4rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
-  .wh-btn {
-    padding: 0.3rem 1rem; border-radius: 6px;
-    border: 1px solid var(--border);
-    background: var(--surface2); color: var(--muted);
-    font-family: 'Inter', sans-serif; font-size: 0.75rem;
-    cursor: pointer; transition: all 0.15s; font-weight: 500;
+  .status-bar-label {
+    font-size: 0.68rem; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.05em; margin-right: 0.25rem;
   }
-  .wh-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
-  .wh-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .wh-status {
+    display: flex; align-items: center; gap: 0.4rem;
+    padding: 0.3rem 0.75rem; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface2);
+    font-size: 0.72rem; font-weight: 500; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .wh-status:hover { border-color: var(--accent); }
+  .wh-status.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .wh-status.active .wh-date { color: #bfdbfe; }
+  .wh-name { font-weight: 600; }
+  .wh-date { font-size: 0.65rem; color: var(--muted); }
+  .wh-status.active .wh-date { color: #bfdbfe; }
+  .update-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .update-dot.fresh { background: #16a34a; }
+  .update-dot.old { background: #d97706; }
+  .update-dot.none { background: #d1d5db; }
+
+  .warehouse-bar {
+    display: none;
+  }
 
   .main { padding: 1.25rem 1.5rem; max-width: 1400px; margin: 0 auto; }
 
@@ -67,7 +82,7 @@
     margin-bottom: 1.25rem; background: var(--surface);
   }
   .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-light); }
-  .upload-zone h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; color: var(--text); }
+  .upload-zone h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
   .upload-zone p { color: var(--muted); font-size: 0.78rem; }
   .upload-zone input { display: none; }
   .upload-btn {
@@ -75,15 +90,10 @@
     background: var(--accent); border-radius: 6px; font-size: 0.78rem;
     font-weight: 600; cursor: pointer; color: white; border: none;
   }
-  .upload-btn:hover { background: #1d4ed8; }
   #upload-status { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
 
   .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
-  .card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 0.85rem 1rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-  }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
   .card-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; font-weight: 500; }
   .card-value { font-size: 1.7rem; font-weight: 700; line-height: 1; color: var(--text); }
   .card-value.red { color: var(--red); }
@@ -96,63 +106,25 @@
     font-size: 0.72rem; color: var(--accent); margin-bottom: 1.25rem; font-weight: 500;
   }
 
-  .controls {
-    display: flex; gap: 0.5rem; margin-bottom: 0.75rem;
-    flex-wrap: wrap; align-items: center;
-    background: var(--surface); padding: 0.6rem 0.85rem;
-    border-radius: 8px; border: 1px solid var(--border);
-  }
-  .filter-btn {
-    padding: 0.28rem 0.75rem; border-radius: 5px;
-    border: 1px solid var(--border);
-    background: var(--surface2); color: var(--muted);
-    font-family: 'Inter', sans-serif; font-size: 0.72rem;
-    cursor: pointer; transition: all 0.15s; font-weight: 500;
-  }
+  .controls { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center; background: var(--surface); padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); }
+  .filter-btn { padding: 0.28rem 0.75rem; border-radius: 5px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: 'Inter', sans-serif; font-size: 0.72rem; cursor: pointer; transition: all 0.15s; font-weight: 500; }
   .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
   .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
-  .search-box {
-    padding: 0.28rem 0.75rem; border-radius: 5px;
-    border: 1px solid var(--border);
-    background: var(--surface); color: var(--text);
-    font-family: 'Inter', sans-serif; font-size: 0.72rem;
-    width: 180px; outline: none;
-  }
-  .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-  .edit-mins-btn {
-    margin-left: auto; padding: 0.28rem 0.75rem; border-radius: 5px;
-    border: 1px solid var(--accent); background: var(--accent-light);
-    color: var(--accent); font-family: 'Inter', sans-serif;
-    font-size: 0.72rem; cursor: pointer; font-weight: 500;
-  }
+  .search-box { padding: 0.28rem 0.75rem; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.72rem; width: 180px; outline: none; }
+  .search-box:focus { border-color: var(--accent); }
+  .edit-mins-btn { margin-left: auto; padding: 0.28rem 0.75rem; border-radius: 5px; border: 1px solid var(--accent); background: var(--accent-light); color: var(--accent); font-family: 'Inter', sans-serif; font-size: 0.72rem; cursor: pointer; font-weight: 500; }
 
-  .table-wrap {
-    overflow-x: auto; border-radius: 8px;
-    border: 1px solid var(--border);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    background: var(--surface);
-  }
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: var(--surface); }
   table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
   thead { background: var(--surface2); }
-  thead th {
-    padding: 0.6rem 0.85rem; text-align: left;
-    font-size: 0.68rem; text-transform: uppercase;
-    letter-spacing: 0.06em; color: var(--muted);
-    white-space: nowrap; font-weight: 600;
-    border-bottom: 1px solid var(--border);
-  }
+  thead th { padding: 0.6rem 0.85rem; text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; font-weight: 600; border-bottom: 1px solid var(--border); }
   tbody tr { border-top: 1px solid var(--border-light); transition: background 0.1s; }
   tbody tr:hover { background: #f8faff; }
   td { padding: 0.55rem 0.85rem; vertical-align: middle; }
-  td.name { font-weight: 600; max-width: 300px; color: var(--text); }
-  td.mono { font-family: 'Inter', monospace; color: var(--text); }
+  td.name { font-weight: 600; max-width: 300px; }
+  td.mono { font-family: 'Inter', monospace; }
 
-  .cat-badge {
-    display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px;
-    font-size: 0.65rem; background: var(--surface2);
-    color: var(--muted); white-space: nowrap; font-weight: 500;
-    border: 1px solid var(--border-light);
-  }
+  .cat-badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.65rem; background: var(--surface2); color: var(--muted); white-space: nowrap; font-weight: 500; border: 1px solid var(--border-light); }
 
   .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
   .status-dot.green { background: #16a34a; }
@@ -160,11 +132,7 @@
   .status-dot.red { background: #dc2626; animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  .order-flag {
-    display: inline-flex; align-items: center; gap: 0.25rem;
-    padding: 0.15rem 0.5rem; border-radius: 4px;
-    font-size: 0.65rem; font-weight: 600;
-  }
+  .order-flag { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
   .order-flag.urgent { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
   .order-flag.soon { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
   .order-flag.ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
@@ -173,45 +141,42 @@
   .bar-bg { height: 4px; width: 55px; border-radius: 2px; background: var(--border-light); overflow: hidden; }
   .bar-fill { height: 100%; border-radius: 2px; }
 
-  .min-input {
-    width: 65px; padding: 0.2rem 0.35rem;
-    background: white; border: 1px solid var(--border);
-    border-radius: 4px; color: var(--text);
-    font-family: 'Inter', sans-serif; font-size: 0.75rem; text-align: right;
-  }
-  .min-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .min-input { width: 65px; padding: 0.2rem 0.35rem; background: white; border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.75rem; text-align: right; }
+  .min-input:focus { outline: none; border-color: var(--accent); }
 
-  .no-data {
-    text-align: center; padding: 3rem 2rem;
-    color: var(--muted); font-size: 0.85rem;
-  }
-
-  @media (max-width: 600px) {
-    .main { padding: 1rem; }
-    td.name { max-width: 140px; }
-  }
+  .no-data { text-align: center; padding: 3rem 2rem; color: var(--muted); font-size: 0.85rem; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="logo">QG <span>Sistemas</span> · Inventario</div>
-  <div id="report-date">Sin datos</div>
 </header>
 
-<div class="warehouse-bar">
-  <span>Almacén:</span>
-  <button class="wh-btn active" data-wh="culiacan">📦 Culiacán</button>
-  <button class="wh-btn" data-wh="cdmx">📦 CDMX</button>
-  <button class="wh-btn" data-wh="oax">📦 OAX</button>
+<div class="status-bar">
+  <span class="status-bar-label">Almacén:</span>
+  <div class="wh-status active" data-wh="culiacan">
+    <div class="update-dot none" id="dot-culiacan"></div>
+    <span class="wh-name">📦 Culiacán</span>
+    <span class="wh-date" id="date-culiacan">Sin datos</span>
+  </div>
+  <div class="wh-status" data-wh="cdmx">
+    <div class="update-dot none" id="dot-cdmx"></div>
+    <span class="wh-name">📦 CDMX</span>
+    <span class="wh-date" id="date-cdmx">Sin datos</span>
+  </div>
+  <div class="wh-status" data-wh="oax">
+    <div class="update-dot none" id="dot-oax"></div>
+    <span class="wh-name">📦 OAX</span>
+    <span class="wh-date" id="date-oax">Sin datos</span>
+  </div>
 </div>
 
 <div class="main">
-
   <div class="upload-zone" id="drop-zone">
     <h2>📂 Cargar reporte diario</h2>
     <p id="upload-wh-label">Almacén: <strong>Culiacán</strong></p>
-    <p style="margin-top:0.25rem;color:var(--muted)">Arrastra el archivo Excel aquí, o haz clic para seleccionar</p>
+    <p style="margin-top:0.25rem">Arrastra el archivo Excel aquí, o haz clic para seleccionar</p>
     <label class="upload-btn">
       Seleccionar archivo
       <input type="file" id="file-input" accept=".xlsx,.xls">
@@ -223,9 +188,7 @@
     <div class="summary-grid" id="summary-cards">
       <div class="card"><div class="card-label">Cargando...</div><div class="card-value">—</div></div>
     </div>
-
     <div id="history-info" class="history-badge" style="display:none"></div>
-
     <div class="controls">
       <button class="filter-btn active" data-filter="all">Todos</button>
       <button class="filter-btn" data-filter="urgente">🔴 Urgente</button>
@@ -239,7 +202,6 @@
       <input class="search-box" id="search" placeholder="🔍 Buscar producto...">
       <button class="edit-mins-btn" id="edit-mins-btn">⚙ Editar mínimos</button>
     </div>
-
     <div class="table-wrap">
       <table>
         <thead>
@@ -259,7 +221,6 @@
       </table>
     </div>
   </div>
-
 </div>
 
 <script>
@@ -268,29 +229,51 @@ let editMode = false;
 let currentFilter = 'all';
 let currentSearch = '';
 let currentWarehouse = 'culiacan';
-
 const whNames = { culiacan: 'Culiacán', cdmx: 'CDMX', oax: 'OAX' };
+
+function daysDiff(dateStr) {
+  if (!dateStr) return null;
+  const parts = dateStr.split('/');
+  const d = new Date(parts[2], parts[1]-1, parts[0]);
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return Math.floor((today - d) / 86400000);
+}
+
+async function loadStatus() {
+  const res = await fetch('/api/status');
+  const data = await res.json();
+  for (const wh of ['culiacan','cdmx','oax']) {
+    const date = data[wh];
+    const dateEl = document.getElementById(`date-${wh}`);
+    const dotEl = document.getElementById(`dot-${wh}`);
+    if (date) {
+      dateEl.textContent = date;
+      const diff = daysDiff(date);
+      dotEl.className = 'update-dot ' + (diff === 0 ? 'fresh' : diff <= 3 ? 'old' : 'none');
+    } else {
+      dateEl.textContent = 'Sin datos';
+      dotEl.className = 'update-dot none';
+    }
+  }
+}
 
 async function loadDashboard() {
   const res = await fetch(`/api/dashboard?warehouse=${currentWarehouse}`);
   const data = await res.json();
   if (!data.has_data) {
-    document.getElementById('report-date').textContent = 'Sin datos';
     document.getElementById('summary-cards').innerHTML = `<div class="card"><div class="card-label">Sin datos</div><div class="card-value">—</div></div>`;
     document.getElementById('history-info').style.display = 'none';
     document.getElementById('table-body').innerHTML = '<tr><td colspan="7" class="no-data">Carga el primer reporte para comenzar</td></tr>';
     return;
   }
   allData = data.products;
-  document.getElementById('report-date').textContent = `${whNames[currentWarehouse]} · ${data.latest_date}`;
-
   const hi = document.getElementById('history-info');
   hi.style.display = 'inline-block';
-  hi.innerHTML = `📈 Historial: <strong>${data.total_days_history} día${data.total_days_history !== 1 ? 's' : ''}</strong> cargados — ${
-    data.total_days_history < 7 ? 'cargue más reportes para mejorar las predicciones' :
+  hi.innerHTML = `📈 Historial: <strong>${data.total_days_history} día${data.total_days_history !== 1 ? 's' : ''}</strong> — ${
+    data.total_days_history < 7 ? 'cargue más reportes para mejorar predicciones' :
     data.total_days_history < 30 ? 'predicciones parciales' : 'predicciones confiables ✓'
   }`;
-
   renderSummary();
   renderTable();
 }
@@ -313,41 +296,29 @@ function renderTable() {
     const matchSearch = !currentSearch || p.name.toLowerCase().includes(currentSearch.toLowerCase());
     return matchFilter && matchSearch;
   });
-
   const tbody = document.getElementById('table-body');
   if (filtered.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="no-data">Sin resultados</td></tr>';
     return;
   }
-
   tbody.innerHTML = filtered.map(p => {
     const dotColor = p.status === 'urgente' ? 'red' : p.status === 'pronto' ? 'yellow' : p.status === 'ok' ? 'green' : '';
     const dotEl = dotColor ? `<span class="status-dot ${dotColor}"></span>` : '';
     const barPct = p.days ? Math.min(100, (p.days / 180) * 100) : 0;
     const barColor = p.status === 'urgente' ? '#dc2626' : p.status === 'pronto' ? '#d97706' : '#16a34a';
-    const orderFlag = p.status === 'urgente'
-      ? '<span class="order-flag urgent">⚠ PEDIR YA</span>'
-      : p.status === 'pronto'
-      ? '<span class="order-flag soon">↑ Pedir pronto</span>'
-      : p.status === 'ok'
-      ? '<span class="order-flag ok">✓ OK</span>'
+    const orderFlag = p.status === 'urgente' ? '<span class="order-flag urgent">⚠ PEDIR YA</span>'
+      : p.status === 'pronto' ? '<span class="order-flag soon">↑ Pedir pronto</span>'
+      : p.status === 'ok' ? '<span class="order-flag ok">✓ OK</span>'
       : `<span style="color:var(--muted);font-size:0.65rem;">Sin historial</span>`;
-
     const minCell = editMode
       ? `<input class="min-input" type="number" value="${p.min_stock}" onchange="updateMin('${p.name.replace(/'/g,"\\'")}', this.value)">`
       : `<span class="mono">${p.min_stock || '—'}</span>`;
-
     return `<tr>
       <td class="name">${dotEl}${p.name}</td>
       <td><span class="cat-badge">${p.cat}</span></td>
       <td class="mono">${p.total.toLocaleString('es-MX')}</td>
       <td>${minCell}</td>
-      <td>
-        <div class="days-bar">
-          <span class="mono" style="min-width:32px">${p.days !== null ? p.days : '—'}</span>
-          <div class="bar-bg"><div class="bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>
-        </div>
-      </td>
+      <td><div class="days-bar"><span class="mono" style="min-width:32px">${p.days !== null ? p.days : '—'}</span><div class="bar-bg"><div class="bar-fill" style="width:${barPct}%;background:${barColor}"></div></div></div></td>
       <td class="mono" style="color:var(--muted)">${p.avg_daily !== null ? p.avg_daily + '/día' : '—'}</td>
       <td>${orderFlag}</td>
     </tr>`;
@@ -355,11 +326,7 @@ function renderTable() {
 }
 
 async function updateMin(name, value) {
-  await fetch('/api/min_stock', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({name, value: parseFloat(value) || 0, warehouse: currentWarehouse})
-  });
+  await fetch('/api/min_stock', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, value: parseFloat(value) || 0, warehouse: currentWarehouse}) });
   await loadDashboard();
 }
 
@@ -373,7 +340,8 @@ async function uploadFile(file) {
     const res = await fetch('/api/upload', { method: 'POST', body: fd });
     const data = await res.json();
     if (data.ok) {
-      status.textContent = `✓ ${file.name} cargado — ${data.count} productos (${data.date})`;
+      status.textContent = `✓ ${file.name} — ${data.count} productos (${data.date})`;
+      await loadStatus();
       await loadDashboard();
     } else {
       status.textContent = `✗ Error: ${data.error}`;
@@ -383,9 +351,9 @@ async function uploadFile(file) {
   }
 }
 
-document.querySelectorAll('.wh-btn').forEach(btn => {
+document.querySelectorAll('.wh-status').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.wh-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.wh-status').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentWarehouse = btn.dataset.wh;
     document.getElementById('upload-wh-label').innerHTML = `Almacén: <strong>${whNames[currentWarehouse]}</strong>`;
@@ -393,10 +361,7 @@ document.querySelectorAll('.wh-btn').forEach(btn => {
   });
 });
 
-document.getElementById('file-input').addEventListener('change', e => {
-  if (e.target.files[0]) uploadFile(e.target.files[0]);
-});
-
+document.getElementById('file-input').addEventListener('change', e => { if (e.target.files[0]) uploadFile(e.target.files[0]); });
 const dz = document.getElementById('drop-zone');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
@@ -411,17 +376,14 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-document.getElementById('search').addEventListener('input', e => {
-  currentSearch = e.target.value;
-  renderTable();
-});
-
+document.getElementById('search').addEventListener('input', e => { currentSearch = e.target.value; renderTable(); });
 document.getElementById('edit-mins-btn').addEventListener('click', () => {
   editMode = !editMode;
   document.getElementById('edit-mins-btn').textContent = editMode ? '✓ Listo' : '⚙ Editar mínimos';
   renderTable();
 });
 
+loadStatus();
 loadDashboard();
 </script>
 </body>
