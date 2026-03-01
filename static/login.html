@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QG Sistemas · Acceso</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f5f7fa;
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .box {
+    background: white; border-radius: 12px;
+    border: 1px solid #d0d5dd;
+    padding: 2.5rem 2rem;
+    width: 100%; max-width: 360px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .logo { font-size: 1.1rem; font-weight: 800; color: #1e3a5f; margin-bottom: 0.25rem; }
+  .logo span { color: #2563eb; }
+  .subtitle { font-size: 0.78rem; color: #667085; margin-bottom: 2rem; }
+  label { display: block; text-align: left; font-size: 0.75rem; font-weight: 600; color: #344054; margin-bottom: 0.35rem; }
+  input {
+    width: 100%; padding: 0.6rem 0.85rem;
+    border: 1px solid #d0d5dd; border-radius: 6px;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
+    outline: none; margin-bottom: 1.25rem;
+  }
+  input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  button {
+    width: 100%; padding: 0.65rem;
+    background: #2563eb; color: white;
+    border: none; border-radius: 6px;
+    font-family: 'Inter', sans-serif; font-size: 0.85rem;
+    font-weight: 600; cursor: pointer;
+  }
+  button:hover { background: #1d4ed8; }
+  .error { color: #b42318; font-size: 0.75rem; margin-top: 0.75rem; display: none; }
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">QG <span>Sistemas</span></div>
+  <div class="subtitle">Control de Inventario</div>
+  <label>Contraseña</label>
+  <input type="password" id="pwd" placeholder="Ingresa la contraseña" onkeydown="if(event.key==='Enter') login()">
+  <button onclick="login()">Ingresar</button>
+  <div class="error" id="error">Contraseña incorrecta</div>
+</div>
+<script>
+async function login() {
+  const pwd = document.getElementById('pwd').value;
+  const res = await fetch('/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({password: pwd})
+  });
+  if (res.ok) {
+    window.location.href = '/';
+  } else {
+    document.getElementById('error').style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
