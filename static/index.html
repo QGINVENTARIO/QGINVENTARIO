@@ -1,197 +1,386 @@
-from flask import Flask, request, jsonify, send_from_directory
-import json, os, openpyxl
-from datetime import datetime
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Inventario · QG Sistemas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117; --surface: #181c27; --surface2: #1e2332;
+    --border: #2a3045; --text: #e8eaf0; --muted: #6b7394;
+    --green: #22c55e; --yellow: #f59e0b; --red: #ef4444;
+    --accent: #6366f1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-app = Flask(__name__, static_folder='static')
+  header {
+    border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 1rem; font-weight: 800; }
+  .logo span { color: var(--accent); }
+  #report-date { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); }
 
-DATA_DIR = 'data'
-os.makedirs(DATA_DIR, exist_ok=True)
+  /* Warehouse selector */
+  .warehouse-bar {
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    padding: 0.6rem 1.5rem; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .warehouse-bar span { font-family: 'DM Mono', monospace; font-size: 0.68rem; color: var(--muted); margin-right: 0.5rem; text-transform: uppercase; letter-spacing: 0.08em; }
+  .wh-btn {
+    padding: 0.3rem 1rem; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; cursor: pointer; transition: all 0.15s;
+  }
+  .wh-btn:hover { border-color: var(--accent); color: var(--text); }
+  .wh-btn.active { background: var(--accent); border-color: var(--accent); color: white; font-weight: 700; }
 
-WAREHOUSES = ['culiacan', 'cdmx', 'oax']
+  .main { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
 
-def data_file(warehouse):
-    return f'{DATA_DIR}/inventory_{warehouse}.json'
+  /* Upload */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 12px; padding: 2.5rem;
+    text-align: center; cursor: pointer; transition: all 0.2s;
+    margin-bottom: 1.5rem; background: var(--surface);
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: #1a1e2e; }
+  .upload-zone h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .upload-zone p { color: var(--muted); font-size: 0.82rem; font-family: 'DM Mono', monospace; }
+  .upload-zone input { display: none; }
+  .upload-btn {
+    display: inline-block; margin-top: 1rem; padding: 0.55rem 1.3rem;
+    background: var(--accent); border-radius: 6px; font-size: 0.82rem;
+    font-weight: 700; cursor: pointer; color: white; border: none;
+  }
+  #upload-status { font-family: 'DM Mono', monospace; font-size: 0.72rem; color: var(--muted); margin-top: 0.6rem; }
 
-def load_data(warehouse):
-    f = data_file(warehouse)
-    if os.path.exists(f):
-        with open(f, 'r', encoding='utf-8') as fp:
-            return json.load(fp)
-    seed_file = 'products_seed.json'
-    if os.path.exists(seed_file):
-        with open(seed_file, 'r', encoding='utf-8') as fp:
-            products = json.load(fp)
-    else:
-        products = []
-    return {
-        'products': {p['name']: {'cat': p['cat'], 'min_stock': 0} for p in products},
-        'snapshots': {},
-        'min_stocks': {}
+  /* Summary */
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 0.8rem; margin-bottom: 1.5rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+  .card-label { font-size: 0.68rem; font-family: 'DM Mono', monospace; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+  .card-value { font-size: 1.9rem; font-weight: 800; line-height: 1; }
+  .card-value.red { color: var(--red); } .card-value.yellow { color: var(--yellow); } .card-value.green { color: var(--green); }
+
+  .history-badge {
+    display: inline-block; padding: 0.5rem 1rem; border-radius: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace; font-size: 0.75rem; color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+  .history-badge strong { color: var(--accent); }
+
+  .controls { display: flex; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; align-items: center; }
+  .filter-btn {
+    padding: 0.35rem 0.9rem; border-radius: 20px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; cursor: pointer; transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .search-box {
+    padding: 0.35rem 0.9rem; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-family: 'DM Mono', monospace;
+    font-size: 0.72rem; width: 200px; outline: none;
+  }
+  .search-box:focus { border-color: var(--accent); }
+
+  .table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  thead { background: var(--surface2); }
+  thead th {
+    padding: 0.65rem 0.9rem; text-align: left; font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); white-space: nowrap;
+  }
+  tbody tr { border-top: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface); }
+  td { padding: 0.6rem 0.9rem; vertical-align: middle; }
+  td.name { font-weight: 600; max-width: 300px; font-size: 0.78rem; }
+  td.mono { font-family: 'DM Mono', monospace; font-size: 0.75rem; }
+
+  .cat-badge {
+    display: inline-block; padding: 0.12rem 0.45rem; border-radius: 4px;
+    font-family: 'DM Mono', monospace; font-size: 0.62rem;
+    background: var(--surface2); color: var(--muted); white-space: nowrap;
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+  .dot.green { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .dot.yellow { background: var(--yellow); box-shadow: 0 0 5px var(--yellow); }
+  .dot.red { background: var(--red); box-shadow: 0 0 5px var(--red); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .order-flag {
+    display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.18rem 0.45rem;
+    border-radius: 4px; font-family: 'DM Mono', monospace; font-size: 0.62rem; font-weight: 700;
+  }
+  .order-flag.urgent { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .order-flag.soon { background: rgba(245,158,11,0.15); color: var(--yellow); border: 1px solid rgba(245,158,11,0.3); }
+  .order-flag.ok { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
+  .days-bar { display: flex; align-items: center; gap: 0.4rem; }
+  .bar-bg { height: 3px; width: 60px; border-radius: 2px; background: var(--border); overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; }
+
+  .min-input {
+    width: 65px; padding: 0.18rem 0.35rem; background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 4px; color: var(--text);
+    font-family: 'DM Mono', monospace; font-size: 0.72rem; text-align: right;
+  }
+  .min-input:focus { outline: none; border-color: var(--accent); }
+
+  .edit-mins-btn {
+    margin-left: auto; padding: 0.35rem 0.9rem; border-radius: 20px;
+    border: 1px solid var(--accent); background: transparent; color: var(--accent);
+    font-family: 'DM Mono', monospace; font-size: 0.72rem; cursor: pointer;
+  }
+
+  .no-data {
+    text-align: center; padding: 4rem 2rem; color: var(--muted);
+    font-family: 'DM Mono', monospace; font-size: 0.85rem;
+  }
+  .no-data h3 { color: var(--text); font-size: 1.2rem; margin-bottom: 0.5rem; }
+
+  @media (max-width: 600px) {
+    .controls { gap: 0.4rem; }
+    .filter-btn { font-size: 0.65rem; padding: 0.3rem 0.6rem; }
+    td.name { max-width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">QG <span>Sistemas</span> · Inventario</div>
+  <div id="report-date">Sin datos</div>
+</header>
+
+<div class="warehouse-bar">
+  <span>Almacén:</span>
+  <button class="wh-btn active" data-wh="culiacan">📦 Culiacán</button>
+  <button class="wh-btn" data-wh="cdmx">📦 CDMX</button>
+  <button class="wh-btn" data-wh="oax">📦 OAX</button>
+</div>
+
+<div class="main">
+
+  <div class="upload-zone" id="drop-zone">
+    <h2>📂 Cargar reporte diario</h2>
+    <p id="upload-wh-label">Almacén: <strong>Culiacán</strong></p>
+    <p style="margin-top:0.3rem">Arrastra el archivo Excel aquí, o haz clic para seleccionar</p>
+    <label class="upload-btn">
+      Seleccionar archivo
+      <input type="file" id="file-input" accept=".xlsx,.xls">
+    </label>
+    <div id="upload-status"></div>
+  </div>
+
+  <div id="dashboard">
+    <div class="summary-grid" id="summary-cards">
+      <div class="card"><div class="card-label">Cargando...</div><div class="card-value" style="color:var(--muted)">—</div></div>
+    </div>
+
+    <div id="history-info" class="history-badge" style="display:none"></div>
+
+    <div class="controls">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="urgente">🔴 Urgente</button>
+      <button class="filter-btn" data-filter="pronto">🟡 Pronto</button>
+      <button class="filter-btn" data-filter="ok">🟢 OK</button>
+      <button class="filter-btn" data-filter="Transparente">Transparente</button>
+      <button class="filter-btn" data-filter="Difusado">Difusado</button>
+      <button class="filter-btn" data-filter="Blanco">Blanco</button>
+      <button class="filter-btn" data-filter="Greenpro">Greenpro</button>
+      <button class="filter-btn" data-filter="Rafia">Rafia</button>
+      <input class="search-box" id="search" placeholder="Buscar...">
+      <button class="edit-mins-btn" id="edit-mins-btn">⚙ Editar mínimos</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th>Stock hoy</th>
+            <th>Mínimo</th>
+            <th>Días estimados</th>
+            <th>Prom/día</th>
+            <th>¿Pedir?</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="7" class="no-data">Carga el primer reporte para comenzar</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let allData = [];
+let editMode = false;
+let currentFilter = 'all';
+let currentSearch = '';
+let currentWarehouse = 'culiacan';
+
+const whNames = { culiacan: 'Culiacán', cdmx: 'CDMX', oax: 'OAX' };
+
+async function loadDashboard() {
+  const res = await fetch(`/api/dashboard?warehouse=${currentWarehouse}`);
+  const data = await res.json();
+  if (!data.has_data) {
+    document.getElementById('report-date').textContent = 'Sin datos';
+    document.getElementById('summary-cards').innerHTML = `<div class="card"><div class="card-label">Sin datos</div><div class="card-value" style="color:var(--muted)">—</div></div>`;
+    document.getElementById('history-info').style.display = 'none';
+    document.getElementById('table-body').innerHTML = '<tr><td colspan="7" class="no-data">Carga el primer reporte para comenzar</td></tr>';
+    return;
+  }
+  allData = data.products;
+  document.getElementById('report-date').textContent = `${whNames[currentWarehouse]} · ${data.latest_date}`;
+
+  const hi = document.getElementById('history-info');
+  hi.style.display = 'inline-block';
+  hi.innerHTML = `📈 Historial: <strong>${data.total_days_history} día${data.total_days_history !== 1 ? 's' : ''}</strong> cargados — ${
+    data.total_days_history < 7 ? 'cargue más reportes para mejorar las predicciones' :
+    data.total_days_history < 30 ? 'predicciones parciales' : 'predicciones confiables ✓'
+  }`;
+
+  renderSummary();
+  renderTable();
+}
+
+function renderSummary() {
+  const counts = { urgente: 0, pronto: 0, ok: 0, sin_datos: 0 };
+  allData.forEach(p => counts[p.status] = (counts[p.status] || 0) + 1);
+  document.getElementById('summary-cards').innerHTML = `
+    <div class="card"><div class="card-label">Total</div><div class="card-value">${allData.length}</div></div>
+    <div class="card"><div class="card-label">🔴 Urgente</div><div class="card-value red">${counts.urgente}</div></div>
+    <div class="card"><div class="card-label">🟡 Pronto</div><div class="card-value yellow">${counts.pronto}</div></div>
+    <div class="card"><div class="card-label">🟢 OK</div><div class="card-value green">${counts.ok}</div></div>
+    <div class="card"><div class="card-label">Sin datos</div><div class="card-value" style="color:var(--muted)">${counts.sin_datos}</div></div>
+  `;
+}
+
+function renderTable() {
+  const filtered = allData.filter(p => {
+    const matchFilter = currentFilter === 'all' || currentFilter === p.status || currentFilter === p.cat;
+    const matchSearch = !currentSearch || p.name.toLowerCase().includes(currentSearch.toLowerCase());
+    return matchFilter && matchSearch;
+  });
+
+  const tbody = document.getElementById('table-body');
+  if (filtered.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted);font-family:\'DM Mono\',monospace;">Sin resultados</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(p => {
+    const dotColor = p.status === 'urgente' ? 'red' : p.status === 'pronto' ? 'yellow' : p.status === 'ok' ? 'green' : '';
+    const barPct = p.days ? Math.min(100, (p.days / 180) * 100) : 0;
+    const barColor = p.status === 'urgente' ? '#ef4444' : p.status === 'pronto' ? '#f59e0b' : '#22c55e';
+    const orderFlag = p.status === 'urgente'
+      ? '<span class="order-flag urgent">⚠ PEDIR YA</span>'
+      : p.status === 'pronto'
+      ? '<span class="order-flag soon">↑ Pedir pronto</span>'
+      : p.status === 'ok'
+      ? '<span class="order-flag ok">✓ OK</span>'
+      : `<span style="color:var(--muted);font-size:0.65rem;font-family:'DM Mono',monospace;">Más datos</span>`;
+
+    const minCell = editMode
+      ? `<input class="min-input" type="number" value="${p.min_stock}" onchange="updateMin('${p.name.replace(/'/g,"\\'")}', this.value)">`
+      : `<span class="mono">${p.min_stock || '—'}</span>`;
+
+    return `<tr>
+      <td class="name">${p.name}</td>
+      <td><span class="cat-badge">${p.cat}</span></td>
+      <td class="mono">${p.total.toLocaleString('es-MX')}</td>
+      <td>${minCell}</td>
+      <td>
+        <div class="days-bar">
+          <span class="mono" style="min-width:36px">${p.days !== null ? p.days : '—'}</span>
+          <div class="bar-bg"><div class="bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>
+        </div>
+      </td>
+      <td class="mono" style="color:var(--muted)">${p.avg_daily !== null ? p.avg_daily + '/día' : '—'}</td>
+      <td>${orderFlag}</td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateMin(name, value) {
+  await fetch('/api/min_stock', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({name, value: parseFloat(value) || 0, warehouse: currentWarehouse})
+  });
+  await loadDashboard();
+}
+
+async function uploadFile(file) {
+  const status = document.getElementById('upload-status');
+  status.textContent = '⏳ Procesando...';
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('warehouse', currentWarehouse);
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.ok) {
+      status.textContent = `✓ ${file.name} cargado — ${data.count} productos (${data.date})`;
+      await loadDashboard();
+    } else {
+      status.textContent = `✗ Error: ${data.error}`;
     }
+  } catch(e) {
+    status.textContent = `✗ Error al subir archivo`;
+  }
+}
 
-def save_data(warehouse, data):
-    with open(data_file(warehouse), 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+// Warehouse switcher
+document.querySelectorAll('.wh-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.wh-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentWarehouse = btn.dataset.wh;
+    document.getElementById('upload-wh-label').innerHTML = `Almacén: <strong>${whNames[currentWarehouse]}</strong>`;
+    loadDashboard();
+  });
+});
 
-def parse_excel(file_stream):
-    wb = openpyxl.load_workbook(file_stream, data_only=True)
-    ws = wb.active
-    rows = list(ws.iter_rows(values_only=True))
-    
-    title = str(rows[0][0] if rows else '')
-    report_date = datetime.now().strftime('%d/%m/%Y')
-    import re
-    m = re.search(r'(\d{1,2})\s+(\w+)\s+(\d{4})', title, re.IGNORECASE)
-    if m:
-        months = {'enero':1,'febrero':2,'marzo':3,'abril':4,'mayo':5,'junio':6,
-                  'julio':7,'agosto':8,'septiembre':9,'octubre':10,'noviembre':11,'diciembre':12}
-        day, month_str, year = m.group(1), m.group(2).lower(), m.group(3)
-        if month_str in months:
-            report_date = f"{int(day):02d}/{months[month_str]:02d}/{year}"
+document.getElementById('file-input').addEventListener('change', e => {
+  if (e.target.files[0]) uploadFile(e.target.files[0]);
+});
 
-    products = {}
-    for i, row in enumerate(rows):
-        if i < 2: continue
-        name = str(row[0] or '').strip()
-        if not name or 'TOTAL' in name.upper(): continue
-        total = 0
-        for val in reversed(row):
-            if val is not None and str(val).strip() not in ('', 'None'):
-                try:
-                    total = float(str(val).replace(',',''))
-                    break
-                except: pass
-        
-        cat = 'Otros'
-        nl = name.lower()
-        if 'rafia' in nl: cat = 'Rafia'
-        elif 'transparente' in nl: cat = 'Transparente'
-        elif 'difus' in nl: cat = 'Difusado'
-        elif 'blanco' in nl: cat = 'Blanco'
-        elif 'greenpro' in nl: cat = 'Greenpro'
-        elif 'mulch' in nl or 'acolchado' in nl: cat = 'Mulch'
-        elif 'semilla' in nl: cat = 'Semilla'
-        
-        products[name] = {'total': total, 'cat': cat}
-    
-    return products, report_date
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); if(e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]); });
 
-@app.route('/')
-def index():
-    return send_from_directory('static', 'index.html')
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = btn.dataset.filter;
+    renderTable();
+  });
+});
 
-@app.route('/api/upload', methods=['POST'])
-def upload():
-    if 'file' not in request.files:
-        return jsonify({'error': 'No file'}), 400
-    
-    warehouse = request.form.get('warehouse', 'culiacan')
-    if warehouse not in WAREHOUSES:
-        return jsonify({'error': 'Invalid warehouse'}), 400
-    
-    f = request.files['file']
-    try:
-        parsed, report_date = parse_excel(f.stream)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
-    
-    data = load_data(warehouse)
-    
-    for name, info in parsed.items():
-        if name not in data['products']:
-            data['products'][name] = {'cat': info['cat'], 'min_stock': 0}
-    
-    snapshot = {name: info['total'] for name, info in parsed.items()}
-    data['snapshots'][report_date] = snapshot
-    
-    save_data(warehouse, data)
-    return jsonify({'ok': True, 'date': report_date, 'count': len(parsed)})
+document.getElementById('search').addEventListener('input', e => {
+  currentSearch = e.target.value;
+  renderTable();
+});
 
-@app.route('/api/dashboard')
-def dashboard():
-    warehouse = request.args.get('warehouse', 'culiacan')
-    if warehouse not in WAREHOUSES:
-        return jsonify({'error': 'Invalid warehouse'}), 400
+document.getElementById('edit-mins-btn').addEventListener('click', () => {
+  editMode = !editMode;
+  document.getElementById('edit-mins-btn').textContent = editMode ? '✓ Listo' : '⚙ Editar mínimos';
+  renderTable();
+});
 
-    data = load_data(warehouse)
-    snapshots = data['snapshots']
-    products_meta = data['products']
-    
-    if not snapshots:
-        return jsonify({'products': [], 'has_data': False})
-    
-    def parse_date(d):
-        try:
-            parts = d.split('/')
-            return (int(parts[2]), int(parts[1]), int(parts[0]))
-        except:
-            return (0,0,0)
-    
-    sorted_dates = sorted(snapshots.keys(), key=parse_date)
-    latest_date = sorted_dates[-1]
-    latest = snapshots[latest_date]
-    
-    avg_consumption = {}
-    for i in range(1, len(sorted_dates)):
-        prev_date = sorted_dates[i-1]
-        curr_date = sorted_dates[i]
-        prev = snapshots[prev_date]
-        curr = snapshots[curr_date]
-        for name in curr:
-            if name in prev and prev[name] > curr[name]:
-                consumed = prev[name] - curr[name]
-                if name not in avg_consumption:
-                    avg_consumption[name] = []
-                avg_consumption[name].append(consumed)
-    
-    result = []
-    for name, total in latest.items():
-        meta = products_meta.get(name, {'cat': 'Otros', 'min_stock': 0})
-        hist = avg_consumption.get(name, [])
-        avg = sum(hist) / len(hist) if hist else None
-        days = int(total / avg) if avg and avg > 0 else None
-        
-        if days is None:
-            status = 'sin_datos'
-        elif days <= 90:
-            status = 'urgente'
-        elif days <= 120:
-            status = 'pronto'
-        else:
-            status = 'ok'
-        
-        result.append({
-            'name': name,
-            'cat': meta.get('cat', 'Otros'),
-            'total': total,
-            'min_stock': meta.get('min_stock', 0),
-            'avg_daily': round(avg, 1) if avg else None,
-            'days': days,
-            'status': status,
-            'history_days': len(hist)
-        })
-    
-    order = {'urgente': 0, 'pronto': 1, 'ok': 2, 'sin_datos': 3}
-    result.sort(key=lambda x: order.get(x['status'], 3))
-    
-    return jsonify({
-        'products': result,
-        'has_data': True,
-        'latest_date': latest_date,
-        'total_days_history': len(sorted_dates)
-    })
-
-@app.route('/api/min_stock', methods=['POST'])
-def set_min_stock():
-    body = request.json
-    warehouse = body.get('warehouse', 'culiacan')
-    data = load_data(warehouse)
-    name = body.get('name')
-    value = body.get('value', 0)
-    if name in data['products']:
-        data['products'][name]['min_stock'] = value
-        save_data(warehouse, data)
-    return jsonify({'ok': True})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
+loadDashboard();
+</script>
+</body>
+</html>
