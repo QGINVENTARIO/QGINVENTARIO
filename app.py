@@ -89,6 +89,19 @@ def parse_excel(file_stream):
 def index():
     return send_from_directory('static', 'index.html')
 
+@app.route('/api/status')
+def status():
+    conn = get_conn()
+    cur = conn.cursor()
+    result = {}
+    for wh in WAREHOUSES:
+        cur.execute('SELECT report_date FROM snapshots WHERE warehouse = %s ORDER BY report_date DESC LIMIT 1', (wh,))
+        row = cur.fetchone()
+        result[wh] = row['report_date'] if row else None
+    cur.close()
+    conn.close()
+    return jsonify(result)
+
 @app.route('/api/upload', methods=['POST'])
 def upload():
     if 'file' not in request.files:
@@ -226,9 +239,7 @@ def set_min_stock():
     
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute('''
-        UPDATE products SET min_stock = %s WHERE warehouse = %s AND name = %s
-    ''', (float(value) or 0, warehouse, name))
+    cur.execute('UPDATE products SET min_stock = %s WHERE warehouse = %s AND name = %s', (float(value) or 0, warehouse, name))
     conn.commit()
     cur.close()
     conn.close()
