@@ -4,28 +4,33 @@ from datetime import datetime
 
 app = Flask(__name__, static_folder='static')
 
-DATA_FILE = 'data/inventory_data.json'
-os.makedirs('data', exist_ok=True)
+DATA_DIR = 'data'
+os.makedirs(DATA_DIR, exist_ok=True)
 
-def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    # Seed with initial products
+WAREHOUSES = ['culiacan', 'cdmx', 'oax']
+
+def data_file(warehouse):
+    return f'{DATA_DIR}/inventory_{warehouse}.json'
+
+def load_data(warehouse):
+    f = data_file(warehouse)
+    if os.path.exists(f):
+        with open(f, 'r', encoding='utf-8') as fp:
+            return json.load(fp)
     seed_file = 'products_seed.json'
     if os.path.exists(seed_file):
-        with open(seed_file, 'r', encoding='utf-8') as f:
-            products = json.load(f)
+        with open(seed_file, 'r', encoding='utf-8') as fp:
+            products = json.load(fp)
     else:
         products = []
     return {
         'products': {p['name']: {'cat': p['cat'], 'min_stock': 0} for p in products},
-        'snapshots': {},   # date -> {product_name -> total}
-        'min_stocks': {}   # product_name -> min
+        'snapshots': {},
+        'min_stocks': {}
     }
 
-def save_data(data):
-    with open(DATA_FILE, 'w', encoding='utf-8') as f:
+def save_data(warehouse, data):
+    with open(data_file(warehouse), 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 def parse_excel(file_stream):
@@ -33,7 +38,6 @@ def parse_excel(file_stream):
     ws = wb.active
     rows = list(ws.iter_rows(values_only=True))
     
-    # Extract date from title
     title = str(rows[0][0] if rows else '')
     report_date = datetime.now().strftime('%d/%m/%Y')
     import re
@@ -50,7 +54,6 @@ def parse_excel(file_stream):
         if i < 2: continue
         name = str(row[0] or '').strip()
         if not name or 'TOTAL' in name.upper(): continue
-        # Find last non-empty value = TOTAL GENERAL
         total = 0
         for val in reversed(row):
             if val is not None and str(val).strip() not in ('', 'None'):
@@ -82,36 +85,41 @@ def upload():
     if 'file' not in request.files:
         return jsonify({'error': 'No file'}), 400
     
+    warehouse = request.form.get('warehouse', 'culiacan')
+    if warehouse not in WAREHOUSES:
+        return jsonify({'error': 'Invalid warehouse'}), 400
+    
     f = request.files['file']
     try:
         parsed, report_date = parse_excel(f.stream)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
     
-    data = load_data()
+    data = load_data(warehouse)
     
-    # Update product catalog
     for name, info in parsed.items():
         if name not in data['products']:
             data['products'][name] = {'cat': info['cat'], 'min_stock': 0}
     
-    # Store snapshot
     snapshot = {name: info['total'] for name, info in parsed.items()}
     data['snapshots'][report_date] = snapshot
     
-    save_data(data)
+    save_data(warehouse, data)
     return jsonify({'ok': True, 'date': report_date, 'count': len(parsed)})
 
 @app.route('/api/dashboard')
 def dashboard():
-    data = load_data()
+    warehouse = request.args.get('warehouse', 'culiacan')
+    if warehouse not in WAREHOUSES:
+        return jsonify({'error': 'Invalid warehouse'}), 400
+
+    data = load_data(warehouse)
     snapshots = data['snapshots']
     products_meta = data['products']
     
     if not snapshots:
         return jsonify({'products': [], 'has_data': False})
     
-    # Get sorted dates
     def parse_date(d):
         try:
             parts = d.split('/')
@@ -123,7 +131,6 @@ def dashboard():
     latest_date = sorted_dates[-1]
     latest = snapshots[latest_date]
     
-    # Calculate avg daily consumption per product
     avg_consumption = {}
     for i in range(1, len(sorted_dates)):
         prev_date = sorted_dates[i-1]
@@ -164,7 +171,6 @@ def dashboard():
             'history_days': len(hist)
         })
     
-    # Sort: urgente first
     order = {'urgente': 0, 'pronto': 1, 'ok': 2, 'sin_datos': 3}
     result.sort(key=lambda x: order.get(x['status'], 3))
     
@@ -178,12 +184,13 @@ def dashboard():
 @app.route('/api/min_stock', methods=['POST'])
 def set_min_stock():
     body = request.json
-    data = load_data()
+    warehouse = body.get('warehouse', 'culiacan')
+    data = load_data(warehouse)
     name = body.get('name')
     value = body.get('value', 0)
     if name in data['products']:
         data['products'][name]['min_stock'] = value
-        save_data(data)
+        save_data(warehouse, data)
     return jsonify({'ok': True})
 
 if __name__ == '__main__':
