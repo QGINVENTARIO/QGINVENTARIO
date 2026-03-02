@@ -3,387 +3,527 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Inventario · QG Sistemas</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>QG InnovAgro — Inventario</title>
 <style>
-  :root {
-    --bg: #f5f7fa;
-    --surface: #ffffff;
-    --surface2: #f0f2f5;
-    --border: #d0d5dd;
-    --border-light: #e4e7ec;
-    --text: #101828;
-    --muted: #667085;
-    --green: #027a48;
-    --green-bg: #ecfdf3;
-    --green-border: #abefc6;
-    --yellow: #b54708;
-    --yellow-bg: #fffaeb;
-    --yellow-border: #fedf89;
-    --red: #b42318;
-    --red-bg: #fef3f2;
-    --red-border: #fecdca;
-    --accent: #2563eb;
-    --accent-light: #eff6ff;
-    --header-bg: #1e3a5f;
-  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13px; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #222; font-size: 14px; }
 
-  header {
-    background: var(--header-bg);
-    padding: 0.75rem 1.5rem;
-    display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-  .logo { font-size: 0.95rem; font-weight: 700; color: white; }
-  .logo span { color: #93c5fd; }
+  /* ── Navegación ─────────────────────────────────── */
+  .nav { background: #1B5E20; color: white; display: flex; align-items: center; gap: 0; padding: 0 16px; height: 48px; }
+  .nav-logo { font-weight: 700; font-size: 16px; margin-right: 24px; }
+  .nav-tab { padding: 14px 18px; cursor: pointer; opacity: .7; font-size: 13px; border-bottom: 3px solid transparent; }
+  .nav-tab.active { opacity: 1; border-bottom-color: #A5D6A7; }
+  .nav-tab:hover { opacity: 1; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .wh-select { padding: 5px 10px; border-radius: 4px; border: none; font-size: 13px; background: #2E7D32; color: white; cursor: pointer; }
+  .wh-dot { width: 10px; height: 10px; border-radius: 50%; background: #aaa; display: inline-block; }
+  .wh-dot.fresh { background: #66BB6A; }
+  .wh-dot.stale  { background: #FFA726; }
 
-  /* Status bar */
-  .status-bar {
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0.6rem 1.5rem;
-    display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;
-  }
-  .status-bar-label {
-    font-size: 0.68rem; color: var(--muted); font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.05em; margin-right: 0.25rem;
-  }
-  .wh-status {
-    display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.3rem 0.75rem; border-radius: 6px;
-    border: 1px solid var(--border); background: var(--surface2);
-    font-size: 0.72rem; font-weight: 500; cursor: pointer;
-    transition: all 0.15s;
-  }
-  .wh-status:hover { border-color: var(--accent); }
-  .wh-status.active { background: var(--accent); border-color: var(--accent); color: white; }
-  .wh-status.active .wh-date { color: #bfdbfe; }
-  .wh-name { font-weight: 600; }
-  .wh-date { font-size: 0.65rem; color: var(--muted); }
-  .wh-status.active .wh-date { color: #bfdbfe; }
-  .update-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .update-dot.fresh { background: #16a34a; }
-  .update-dot.old { background: #d97706; }
-  .update-dot.none { background: #d1d5db; }
+  /* ── Contenido ──────────────────────────────────── */
+  .page { display: none; padding: 20px; }
+  .page.active { display: block; }
 
-  .warehouse-bar {
-    display: none;
-  }
+  /* ── Tarjetas resumen ───────────────────────────── */
+  .summary-cards { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .card { background: white; border-radius: 8px; padding: 14px 18px; flex: 1; min-width: 140px;
+          box-shadow: 0 1px 4px rgba(0,0,0,.1); border-left: 4px solid #ccc; }
+  .card.green  { border-color: #4CAF50; }
+  .card.orange { border-color: #FF9800; }
+  .card.red    { border-color: #F44336; }
+  .card.blue   { border-color: #2196F3; }
+  .card-val { font-size: 28px; font-weight: 700; line-height: 1; }
+  .card-lbl { font-size: 11px; color: #777; margin-top: 4px; }
 
-  .main { padding: 1.25rem 1.5rem; max-width: 1400px; margin: 0 auto; }
+  /* ── Tabla productos (dashboard) ───────────────── */
+  .toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+  .toolbar input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; width: 220px; }
+  .toolbar select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+  .btn { padding: 6px 14px; border-radius: 4px; border: none; cursor: pointer; font-size: 13px; }
+  .btn-green  { background: #2E7D32; color: white; }
+  .btn-green:hover { background: #1B5E20; }
+  .btn-blue   { background: #1565C0; color: white; }
+  .btn-blue:hover { background: #0D47A1; }
+  .btn-red    { background: #C62828; color: white; }
+  .btn-red:hover { background: #b71c1c; }
+  .btn-outline { background: white; border: 1px solid #ccc; color: #333; }
+  .btn-outline:hover { background: #f5f5f5; }
 
-  .upload-zone {
-    border: 1.5px dashed var(--border);
-    border-radius: 8px; padding: 1.5rem;
-    text-align: center; cursor: pointer; transition: all 0.2s;
-    margin-bottom: 1.25rem; background: var(--surface);
-  }
-  .upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-light); }
-  .upload-zone h2 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
-  .upload-zone p { color: var(--muted); font-size: 0.78rem; }
-  .upload-zone input { display: none; }
-  .upload-btn {
-    display: inline-block; margin-top: 0.75rem; padding: 0.45rem 1.1rem;
-    background: var(--accent); border-radius: 6px; font-size: 0.78rem;
-    font-weight: 600; cursor: pointer; color: white; border: none;
-  }
-  #upload-status { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; }
+  table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;
+          box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+  th { background: #E8F5E9; font-weight: 600; padding: 10px 12px; text-align: left; font-size: 12px;
+       color: #1B5E20; border-bottom: 2px solid #C8E6C9; white-space: nowrap; }
+  td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafafa; }
 
-  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 0.75rem; margin-bottom: 1.25rem; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-  .card-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; font-weight: 500; }
-  .card-value { font-size: 1.7rem; font-weight: 700; line-height: 1; color: var(--text); }
-  .card-value.red { color: var(--red); }
-  .card-value.yellow { color: var(--yellow); }
-  .card-value.green { color: var(--green); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .badge-ok      { background: #E8F5E9; color: #2E7D32; }
+  .badge-warn    { background: #FFF3E0; color: #E65100; }
+  .badge-urgente { background: #FFEBEE; color: #C62828; }
+  .badge-nd      { background: #F5F5F5; color: #777; }
+  .badge-jumbo   { background: #E3F2FD; color: #1565C0; }
+  .badge-rest    { background: #FFF8E1; color: #F57F17; }
+  .badge-vend    { background: #E8F5E9; color: #2E7D32; }
+  .badge-novend  { background: #FFEBEE; color: #C62828; }
 
-  .history-badge {
-    display: inline-block; padding: 0.4rem 0.85rem; border-radius: 6px;
-    background: var(--accent-light); border: 1px solid #bfdbfe;
-    font-size: 0.72rem; color: var(--accent); margin-bottom: 1.25rem; font-weight: 500;
-  }
+  /* ── Panel rollos ───────────────────────────────── */
+  .rollos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+  .rollos-header h2 { font-size: 16px; color: #1B5E20; }
+  .resumen-rollos { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .res-card { background: white; border-radius: 6px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.1); min-width: 120px; }
+  .res-val { font-size: 22px; font-weight: 700; }
+  .res-lbl { font-size: 10px; color: #888; }
 
-  .controls { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap; align-items: center; background: var(--surface); padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); }
-  .filter-btn { padding: 0.28rem 0.75rem; border-radius: 5px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: 'Inter', sans-serif; font-size: 0.72rem; cursor: pointer; transition: all 0.15s; font-weight: 500; }
-  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
-  .search-box { padding: 0.28rem 0.75rem; border-radius: 5px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.72rem; width: 180px; outline: none; }
-  .search-box:focus { border-color: var(--accent); }
-  .edit-mins-btn { margin-left: auto; padding: 0.28rem 0.75rem; border-radius: 5px; border: 1px solid var(--accent); background: var(--accent-light); color: var(--accent); font-family: 'Inter', sans-serif; font-size: 0.72rem; cursor: pointer; font-weight: 500; }
+  /* ── Modal agregar rollo ────────────────────────── */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .modal { background: white; border-radius: 10px; padding: 24px; width: 400px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+  .modal h3 { margin-bottom: 16px; color: #1B5E20; }
+  .form-row { margin-bottom: 12px; }
+  .form-row label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+  .form-row textarea { resize: vertical; min-height: 60px; }
+  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
 
-  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); background: var(--surface); }
-  table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-  thead { background: var(--surface2); }
-  thead th { padding: 0.6rem 0.85rem; text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); white-space: nowrap; font-weight: 600; border-bottom: 1px solid var(--border); }
-  tbody tr { border-top: 1px solid var(--border-light); transition: background 0.1s; }
-  tbody tr:hover { background: #f8faff; }
-  td { padding: 0.55rem 0.85rem; vertical-align: middle; }
-  td.name { font-weight: 600; max-width: 300px; }
-  td.mono { font-family: 'Inter', monospace; }
+  /* ── Upload ─────────────────────────────────────── */
+  .upload-box { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.1); max-width: 500px; }
+  .upload-box h3 { margin-bottom: 14px; color: #1B5E20; }
+  .info-box { background: #E8F5E9; border-radius: 6px; padding: 12px 14px; margin-top: 14px; font-size: 12px; color: #2E7D32; }
+  .tag { display: inline-block; background: #eee; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin: 2px; }
 
-  .cat-badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.65rem; background: var(--surface2); color: var(--muted); white-space: nowrap; font-weight: 500; border: 1px solid var(--border-light); }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: #2E7D32;
+             border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-  .status-dot.green { background: #16a34a; }
-  .status-dot.yellow { background: #d97706; }
-  .status-dot.red { background: #dc2626; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
 
-  .order-flag { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
-  .order-flag.urgent { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
-  .order-flag.soon { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
-  .order-flag.ok { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
-
-  .days-bar { display: flex; align-items: center; gap: 0.4rem; }
-  .bar-bg { height: 4px; width: 55px; border-radius: 2px; background: var(--border-light); overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 2px; }
-
-  .min-input { width: 65px; padding: 0.2rem 0.35rem; background: white; border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.75rem; text-align: right; }
-  .min-input:focus { outline: none; border-color: var(--accent); }
-
-  .no-data { text-align: center; padding: 3rem 2rem; color: var(--muted); font-size: 0.85rem; }
+  /* filtro producto en panel rollos */
+  .filter-prod { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; min-width: 220px; }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">QG <span>Sistemas</span> · Inventario</div>
-</header>
-
-<div class="status-bar">
-  <span class="status-bar-label">Almacén:</span>
-  <div class="wh-status active" data-wh="culiacan">
-    <div class="update-dot none" id="dot-culiacan"></div>
-    <span class="wh-name">📦 Culiacán</span>
-    <span class="wh-date" id="date-culiacan">Sin datos</span>
-  </div>
-  <div class="wh-status" data-wh="cdmx">
-    <div class="update-dot none" id="dot-cdmx"></div>
-    <span class="wh-name">📦 CDMX</span>
-    <span class="wh-date" id="date-cdmx">Sin datos</span>
-  </div>
-  <div class="wh-status" data-wh="oax">
-    <div class="update-dot none" id="dot-oax"></div>
-    <span class="wh-name">📦 OAX</span>
-    <span class="wh-date" id="date-oax">Sin datos</span>
+<!-- NAVEGACIÓN -->
+<div class="nav">
+  <div class="nav-logo">🌱 QG InnovAgro</div>
+  <div class="nav-tab active" onclick="showPage('dashboard',this)">Dashboard</div>
+  <div class="nav-tab" onclick="showPage('rollos',this)">Rollos de Plástico</div>
+  <div class="nav-tab" onclick="showPage('upload',this)">Cargar Excel</div>
+  <div class="nav-right">
+    <span class="wh-dot" id="wh-dot"></span>
+    <select class="wh-select" id="wh-select" onchange="changeWarehouse()">
+      <option value="culiacan">Culiacán</option>
+      <option value="cdmx">CDMX</option>
+      <option value="oax">Oaxaca</option>
+    </select>
   </div>
 </div>
 
-<div class="main">
-  <div class="upload-zone" id="drop-zone">
-    <h2>📂 Cargar reporte diario</h2>
-    <p id="upload-wh-label">Almacén: <strong>Culiacán</strong></p>
-    <p style="margin-top:0.25rem">Arrastra el archivo Excel aquí, o haz clic para seleccionar</p>
-    <label class="upload-btn">
-      Seleccionar archivo
-      <input type="file" id="file-input" accept=".xlsx,.xls">
-    </label>
-    <div id="upload-status"></div>
+<!-- ═══════════════ PÁGINA: DASHBOARD ═══════════════ -->
+<div class="page active" id="page-dashboard">
+  <div id="dash-loading" style="padding:40px;text-align:center;color:#aaa;">Cargando...</div>
+  <div id="dash-content" style="display:none">
+    <div class="summary-cards" id="dash-cards"></div>
+    <div class="toolbar">
+      <input type="text" id="dash-search" placeholder="Buscar producto..." oninput="filterDash()">
+      <select id="dash-cat" onchange="filterDash()">
+        <option value="">Todas las categorías</option>
+        <option>Transparente</option><option>Difusado</option><option>Blanco</option>
+        <option>Greenpro</option><option>Mulch</option><option>Rafia</option><option>Semilla</option><option>Otros</option>
+      </select>
+      <select id="dash-status" onchange="filterDash()">
+        <option value="">Todos los estados</option>
+        <option value="urgente">🔴 Urgente</option>
+        <option value="pronto">🟡 Pronto</option>
+        <option value="ok">🟢 OK</option>
+        <option value="sin_datos">⚪ Sin datos</option>
+      </select>
+    </div>
+    <table>
+      <thead><tr>
+        <th>Producto</th><th>Categoría</th><th>Total (m)</th>
+        <th>Consumo diario</th><th>Días restantes</th><th>Estado</th>
+      </tr></thead>
+      <tbody id="dash-tbody"></tbody>
+    </table>
+    <div id="dash-empty" class="empty" style="display:none">No hay productos que coincidan.</div>
+  </div>
+</div>
+
+<!-- ═══════════════ PÁGINA: ROLLOS ═══════════════════ -->
+<div class="page" id="page-rollos">
+  <div class="rollos-header">
+    <h2>🎞 Rollos de Plástico</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <select class="filter-prod" id="rollos-prod-filter" onchange="loadRollos()">
+        <option value="">Todos los productos</option>
+      </select>
+      <button class="btn btn-green" onclick="openAddRollo()">+ Agregar rollo</button>
+    </div>
   </div>
 
-  <div id="dashboard">
-    <div class="summary-grid" id="summary-cards">
-      <div class="card"><div class="card-label">Cargando...</div><div class="card-value">—</div></div>
+  <!-- Resumen -->
+  <div class="resumen-rollos" id="rollos-resumen"></div>
+
+  <!-- Tabla -->
+  <table>
+    <thead><tr>
+      <th>Producto</th><th>Metros</th><th>Tipo</th><th>¿Vendible?</th>
+      <th>Fecha registro</th><th>Notas</th><th>Acciones</th>
+    </tr></thead>
+    <tbody id="rollos-tbody"></tbody>
+  </table>
+  <div id="rollos-empty" class="empty" style="display:none">No hay rollos registrados.</div>
+
+  <div style="margin-top:12px;font-size:12px;color:#888;">
+    ⚠️ Un rollo se considera <strong>vendible</strong> cuando tiene ≥ 100 metros.
+    Un rollo <strong>jumbo</strong> puede cortarse en secciones para clientes.
+  </div>
+</div>
+
+<!-- ═══════════════ PÁGINA: UPLOAD ═══════════════════ -->
+<div class="page" id="page-upload">
+  <div class="upload-box">
+    <h3>📂 Cargar reporte Excel</h3>
+    <div class="form-row">
+      <label>Almacén</label>
+      <select id="upload-wh" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;">
+        <option value="culiacan">Culiacán</option>
+        <option value="cdmx">CDMX</option>
+        <option value="oax">Oaxaca</option>
+      </select>
     </div>
-    <div id="history-info" class="history-badge" style="display:none"></div>
-    <div class="controls">
-      <button class="filter-btn active" data-filter="all">Todos</button>
-      <button class="filter-btn" data-filter="urgente">🔴 Urgente</button>
-      <button class="filter-btn" data-filter="pronto">🟡 Pronto</button>
-      <button class="filter-btn" data-filter="ok">🟢 OK</button>
-      <button class="filter-btn" data-filter="Transparente">Transparente</button>
-      <button class="filter-btn" data-filter="Difusado">Difusado</button>
-      <button class="filter-btn" data-filter="Blanco">Blanco</button>
-      <button class="filter-btn" data-filter="Greenpro">Greenpro</button>
-      <button class="filter-btn" data-filter="Rafia">Rafia</button>
-      <input class="search-box" id="search" placeholder="🔍 Buscar producto...">
-      <button class="edit-mins-btn" id="edit-mins-btn">⚙ Editar mínimos</button>
+    <div class="form-row">
+      <label>Archivo Excel (.xlsx)</label>
+      <input type="file" id="upload-file" accept=".xlsx,.xls">
     </div>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th>Categoría</th>
-            <th>Stock hoy</th>
-            <th>Mínimo</th>
-            <th>Días estimados</th>
-            <th>Prom/día</th>
-            <th>¿Pedir?</th>
-          </tr>
-        </thead>
-        <tbody id="table-body">
-          <tr><td colspan="7" class="no-data">Carga el primer reporte para comenzar</td></tr>
-        </tbody>
-      </table>
+    <button class="btn btn-green" onclick="doUpload()">Cargar</button>
+    <div id="upload-msg" style="margin-top:10px;font-size:13px;"></div>
+    <div class="info-box">
+      El archivo debe tener la misma estructura que el reporte habitual:<br>
+      fila 1 = título con fecha, fila 2 = encabezados, filas siguientes = productos con total al final.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: AGREGAR ROLLO ═════════════ -->
+<div class="overlay" id="overlay-rollo">
+  <div class="modal">
+    <h3>+ Agregar rollo de plástico</h3>
+    <div class="form-row">
+      <label>Producto</label>
+      <input type="text" id="rollo-prod" placeholder="Ej: Transparente Ginegar 8m 200μ" list="rollo-prod-list">
+      <datalist id="rollo-prod-list"></datalist>
+    </div>
+    <div class="form-row">
+      <label>Metros</label>
+      <input type="number" id="rollo-metros" min="1" step="0.5" placeholder="Ej: 8500">
+    </div>
+    <div class="form-row">
+      <label>Tipo de rollo</label>
+      <select id="rollo-tipo">
+        <option value="jumbo">Jumbo (rollo completo — se puede cortar)</option>
+        <option value="restante">Restante / Sobrante</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Notas (opcional)</label>
+      <textarea id="rollo-notas" placeholder="Ej: Lote 2024-A, proveedor Ginegar..."></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-green" onclick="saveRollo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ MODAL: EDITAR METROS ════════════ -->
+<div class="overlay" id="overlay-edit">
+  <div class="modal">
+    <h3>✏️ Actualizar metros del rollo</h3>
+    <input type="hidden" id="edit-id">
+    <div class="form-row">
+      <label>Producto</label>
+      <div id="edit-prod-lbl" style="padding:6px;background:#f5f5f5;border-radius:4px;font-size:13px;"></div>
+    </div>
+    <div class="form-row">
+      <label>Metros actuales</label>
+      <input type="number" id="edit-metros" min="0" step="0.5">
+    </div>
+    <div class="form-row">
+      <label>Notas</label>
+      <textarea id="edit-notas"></textarea>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn btn-blue" onclick="saveEdit()">Actualizar</button>
     </div>
   </div>
 </div>
 
 <script>
-let allData = [];
-let editMode = false;
-let currentFilter = 'all';
-let currentSearch = '';
-let currentWarehouse = 'culiacan';
-const whNames = { culiacan: 'Culiacán', cdmx: 'CDMX', oax: 'OAX' };
+// ─── Estado ────────────────────────────────────────────────────────────────
+let currentWH = 'culiacan';
+let dashData = [];
+let rollosData = [];
+let productNames = new Set();
 
-function daysDiff(dateStr) {
-  if (!dateStr) return null;
-  const parts = dateStr.split('/');
-  const d = new Date(parts[2], parts[1]-1, parts[0]);
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  return Math.floor((today - d) / 86400000);
+// ─── Navegación ────────────────────────────────────────────────────────────
+function showPage(name, tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (tab) tab.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'rollos') loadRollos();
 }
 
-async function loadStatus() {
-  const res = await fetch('/api/status');
-  const data = await res.json();
-  for (const wh of ['culiacan','cdmx','oax']) {
-    const date = data[wh];
-    const dateEl = document.getElementById(`date-${wh}`);
-    const dotEl = document.getElementById(`dot-${wh}`);
-    if (date) {
-      dateEl.textContent = date;
-      const diff = daysDiff(date);
-      dotEl.className = 'update-dot ' + (diff === 0 ? 'fresh' : diff <= 3 ? 'old' : 'none');
-    } else {
-      dateEl.textContent = 'Sin datos';
-      dotEl.className = 'update-dot none';
-    }
-  }
+function changeWarehouse() {
+  currentWH = document.getElementById('wh-select').value;
+  document.getElementById('upload-wh').value = currentWH;
+  const activePage = document.querySelector('.page.active').id.replace('page-','');
+  if (activePage === 'dashboard') loadDashboard();
+  if (activePage === 'rollos') loadRollos();
 }
 
+// ─── Dashboard ─────────────────────────────────────────────────────────────
 async function loadDashboard() {
-  const res = await fetch(`/api/dashboard?warehouse=${currentWarehouse}`);
-  const data = await res.json();
-  if (!data.has_data) {
-    document.getElementById('summary-cards').innerHTML = `<div class="card"><div class="card-label">Sin datos</div><div class="card-value">—</div></div>`;
-    document.getElementById('history-info').style.display = 'none';
-    document.getElementById('table-body').innerHTML = '<tr><td colspan="7" class="no-data">Carga el primer reporte para comenzar</td></tr>';
+  document.getElementById('dash-loading').style.display = '';
+  document.getElementById('dash-content').style.display = 'none';
+
+  try {
+    const r = await fetch(`/api/dashboard?warehouse=${currentWH}`);
+    const data = await r.json();
+
+    document.getElementById('dash-loading').style.display = 'none';
+    document.getElementById('dash-content').style.display = '';
+
+    if (!data.has_data) {
+      document.getElementById('dash-cards').innerHTML = '';
+      document.getElementById('dash-tbody').innerHTML = '';
+      document.getElementById('dash-empty').style.display = '';
+      document.getElementById('dash-empty').textContent = 'No hay datos. Carga un Excel primero.';
+      return;
+    }
+
+    dashData = data.products;
+    productNames = new Set(dashData.map(p => p.name));
+
+    // Cards resumen
+    const urgente = dashData.filter(p => p.status === 'urgente').length;
+    const pronto  = dashData.filter(p => p.status === 'pronto').length;
+    const ok      = dashData.filter(p => p.status === 'ok').length;
+    document.getElementById('dash-cards').innerHTML = `
+      <div class="card red"><div class="card-val">${urgente}</div><div class="card-lbl">🔴 URGENTE (&lt;90d)</div></div>
+      <div class="card orange"><div class="card-val">${pronto}</div><div class="card-lbl">🟡 PRONTO (90-120d)</div></div>
+      <div class="card green"><div class="card-val">${ok}</div><div class="card-lbl">🟢 OK (&gt;120d)</div></div>
+      <div class="card blue"><div class="card-lbl" style="margin-top:6px">📅 Última carga</div><div style="font-size:13px;font-weight:600">${data.latest_date}</div></div>
+    `;
+
+    // Estado del almacén (frescura)
+    const dot = document.getElementById('wh-dot');
+    const today = new Date();
+    const parts = data.latest_date.split('/');
+    const lastDate = new Date(parts[2], parts[1]-1, parts[0]);
+    const diffDays = Math.floor((today - lastDate) / 86400000);
+    dot.className = 'wh-dot ' + (diffDays <= 7 ? 'fresh' : 'stale');
+
+    filterDash();
+  } catch(e) {
+    document.getElementById('dash-loading').textContent = 'Error cargando datos.';
+  }
+}
+
+function filterDash() {
+  const search = document.getElementById('dash-search').value.toLowerCase();
+  const cat    = document.getElementById('dash-cat').value;
+  const status = document.getElementById('dash-status').value;
+
+  const filtered = dashData.filter(p =>
+    (!search || p.name.toLowerCase().includes(search)) &&
+    (!cat    || p.cat === cat) &&
+    (!status || p.status === status)
+  );
+
+  const statusLabel = { urgente:'🔴 Urgente', pronto:'🟡 Pronto', ok:'🟢 OK', sin_datos:'⚪ Sin datos' };
+  const statusBadge = { urgente:'badge-urgente', pronto:'badge-warn', ok:'badge-ok', sin_datos:'badge-nd' };
+
+  const tbody = document.getElementById('dash-tbody');
+  if (!filtered.length) {
+    tbody.innerHTML = '';
+    document.getElementById('dash-empty').style.display = '';
     return;
   }
-  allData = data.products;
-  const hi = document.getElementById('history-info');
-  hi.style.display = 'inline-block';
-  hi.innerHTML = `📈 Historial: <strong>${data.total_days_history} día${data.total_days_history !== 1 ? 's' : ''}</strong> — ${
-    data.total_days_history < 7 ? 'cargue más reportes para mejorar predicciones' :
-    data.total_days_history < 30 ? 'predicciones parciales' : 'predicciones confiables ✓'
-  }`;
-  renderSummary();
-  renderTable();
+  document.getElementById('dash-empty').style.display = 'none';
+  tbody.innerHTML = filtered.map(p => `
+    <tr>
+      <td><strong>${p.name}</strong></td>
+      <td><span class="tag">${p.cat}</span></td>
+      <td>${p.total.toLocaleString()} m</td>
+      <td>${p.avg_daily != null ? p.avg_daily + ' m/día' : '—'}</td>
+      <td>${p.days != null ? p.days + ' días' : '—'}</td>
+      <td><span class="badge ${statusBadge[p.status]}">${statusLabel[p.status]}</span></td>
+    </tr>
+  `).join('');
 }
 
-function renderSummary() {
-  const counts = { urgente: 0, pronto: 0, ok: 0, sin_datos: 0 };
-  allData.forEach(p => counts[p.status] = (counts[p.status] || 0) + 1);
-  document.getElementById('summary-cards').innerHTML = `
-    <div class="card"><div class="card-label">Total productos</div><div class="card-value">${allData.length}</div></div>
-    <div class="card"><div class="card-label">🔴 Urgente</div><div class="card-value red">${counts.urgente}</div></div>
-    <div class="card"><div class="card-label">🟡 Pedir pronto</div><div class="card-value yellow">${counts.pronto}</div></div>
-    <div class="card"><div class="card-label">🟢 Stock OK</div><div class="card-value green">${counts.ok}</div></div>
-    <div class="card"><div class="card-label">Sin historial</div><div class="card-value" style="color:var(--muted)">${counts.sin_datos}</div></div>
-  `;
+// ─── Rollos ─────────────────────────────────────────────────────────────────
+async function loadRollos() {
+  const prodFilter = document.getElementById('rollos-prod-filter').value;
+  let url = `/api/rollos?warehouse=${currentWH}`;
+  if (prodFilter) url += `&product=${encodeURIComponent(prodFilter)}`;
+
+  try {
+    const r = await fetch(url);
+    const data = await r.json();
+    rollosData = data.rollos;
+
+    // Actualizar lista de productos en el filtro y en datalist
+    const allProds = [...new Set(data.resumen.map(r => r.product_name))].sort();
+    const filterSel = document.getElementById('rollos-prod-filter');
+    const currentVal = filterSel.value;
+    filterSel.innerHTML = '<option value="">Todos los productos</option>' +
+      allProds.map(p => `<option value="${p}" ${p===currentVal?'selected':''}>${p}</option>`).join('');
+
+    const dl = document.getElementById('rollo-prod-list');
+    dl.innerHTML = allProds.map(p => `<option value="${p}">`).join('');
+
+    // Resumen cards
+    const resDiv = document.getElementById('rollos-resumen');
+    if (data.resumen.length === 0) {
+      resDiv.innerHTML = '';
+    } else {
+      let totalJumbo = 0, totalRest = 0, totalVend = 0, totalNoVend = 0, totalMetros = 0;
+      data.resumen.forEach(r => {
+        totalJumbo  += Number(r.rollos_jumbo || 0);
+        totalRest   += Number(r.rollos_restante || 0);
+        totalVend   += Number(r.rollos_vendibles || 0);
+        totalNoVend += Number(r.rollos_no_vendibles || 0);
+        totalMetros += Number(r.metros_total || 0);
+      });
+      resDiv.innerHTML = `
+        <div class="res-card"><div class="res-val" style="color:#1565C0">${totalJumbo}</div><div class="res-lbl">Rollos Jumbo</div></div>
+        <div class="res-card"><div class="res-val" style="color:#F57F17">${totalRest}</div><div class="res-lbl">Restantes</div></div>
+        <div class="res-card"><div class="res-val" style="color:#2E7D32">${totalVend}</div><div class="res-lbl">✅ Vendibles (≥100m)</div></div>
+        <div class="res-card"><div class="res-val" style="color:#C62828">${totalNoVend}</div><div class="res-lbl">❌ No vendibles (&lt;100m)</div></div>
+        <div class="res-card"><div class="res-val" style="color:#333">${totalMetros.toLocaleString()}</div><div class="res-lbl">Total metros</div></div>
+      `;
+    }
+
+    // Tabla de rollos
+    const tbody = document.getElementById('rollos-tbody');
+    const empty = document.getElementById('rollos-empty');
+    if (!rollosData.length) {
+      tbody.innerHTML = '';
+      empty.style.display = '';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = rollosData.map(r => `
+      <tr>
+        <td><strong>${r.product_name}</strong></td>
+        <td><strong>${Number(r.metros).toLocaleString()} m</strong></td>
+        <td><span class="badge ${r.tipo === 'jumbo' ? 'badge-jumbo' : 'badge-rest'}">
+          ${r.tipo === 'jumbo' ? '🔵 Jumbo' : '🟡 Restante'}</span></td>
+        <td><span class="badge ${r.vendible ? 'badge-vend' : 'badge-novend'}">
+          ${r.vendible ? '✅ Sí' : '❌ No'}</span></td>
+        <td>${new Date(r.fecha_registro).toLocaleDateString('es-MX')}</td>
+        <td style="color:#777;font-size:12px">${r.notas || '—'}</td>
+        <td>
+          <button class="btn btn-outline" style="font-size:11px;padding:3px 8px" onclick="openEditRollo(${r.id},'${r.product_name.replace(/'/g,"\\'")}',${r.metros},'${(r.notas||'').replace(/'/g,"\\'")}')">✏️</button>
+          <button class="btn btn-red" style="font-size:11px;padding:3px 8px;margin-left:4px" onclick="deleteRollo(${r.id})">🗑</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch(e) {
+    document.getElementById('rollos-tbody').innerHTML = '<tr><td colspan="7" style="color:red;padding:20px">Error cargando rollos.</td></tr>';
+  }
 }
 
-function renderTable() {
-  const filtered = allData.filter(p => {
-    const matchFilter = currentFilter === 'all' || currentFilter === p.status || currentFilter === p.cat;
-    const matchSearch = !currentSearch || p.name.toLowerCase().includes(currentSearch.toLowerCase());
-    return matchFilter && matchSearch;
+// ─── Modal agregar rollo ────────────────────────────────────────────────────
+function openAddRollo() {
+  document.getElementById('rollo-prod').value = '';
+  document.getElementById('rollo-metros').value = '';
+  document.getElementById('rollo-tipo').value = 'jumbo';
+  document.getElementById('rollo-notas').value = '';
+  document.getElementById('overlay-rollo').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('overlay-rollo').classList.remove('open');
+}
+async function saveRollo() {
+  const prod   = document.getElementById('rollo-prod').value.trim();
+  const metros = parseFloat(document.getElementById('rollo-metros').value);
+  const tipo   = document.getElementById('rollo-tipo').value;
+  const notas  = document.getElementById('rollo-notas').value.trim();
+  if (!prod || isNaN(metros) || metros <= 0) { alert('Completa producto y metros.'); return; }
+  await fetch('/api/rollos', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ warehouse: currentWH, product_name: prod, metros, tipo, notas })
   });
-  const tbody = document.getElementById('table-body');
-  if (filtered.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="no-data">Sin resultados</td></tr>';
-    return;
-  }
-  tbody.innerHTML = filtered.map(p => {
-    const dotColor = p.status === 'urgente' ? 'red' : p.status === 'pronto' ? 'yellow' : p.status === 'ok' ? 'green' : '';
-    const dotEl = dotColor ? `<span class="status-dot ${dotColor}"></span>` : '';
-    const barPct = p.days ? Math.min(100, (p.days / 180) * 100) : 0;
-    const barColor = p.status === 'urgente' ? '#dc2626' : p.status === 'pronto' ? '#d97706' : '#16a34a';
-    const orderFlag = p.status === 'urgente' ? '<span class="order-flag urgent">⚠ PEDIR YA</span>'
-      : p.status === 'pronto' ? '<span class="order-flag soon">↑ Pedir pronto</span>'
-      : p.status === 'ok' ? '<span class="order-flag ok">✓ OK</span>'
-      : `<span style="color:var(--muted);font-size:0.65rem;">Sin historial</span>`;
-    const minCell = editMode
-      ? `<input class="min-input" type="number" value="${p.min_stock}" onchange="updateMin('${p.name.replace(/'/g,"\\'")}', this.value)">`
-      : `<span class="mono">${p.min_stock || '—'}</span>`;
-    return `<tr>
-      <td class="name">${dotEl}${p.name}</td>
-      <td><span class="cat-badge">${p.cat}</span></td>
-      <td class="mono">${p.total.toLocaleString('es-MX')}</td>
-      <td>${minCell}</td>
-      <td><div class="days-bar"><span class="mono" style="min-width:32px">${p.days !== null ? p.days : '—'}</span><div class="bar-bg"><div class="bar-fill" style="width:${barPct}%;background:${barColor}"></div></div></div></td>
-      <td class="mono" style="color:var(--muted)">${p.avg_daily !== null ? p.avg_daily + '/día' : '—'}</td>
-      <td>${orderFlag}</td>
-    </tr>`;
-  }).join('');
+  closeModal();
+  loadRollos();
 }
 
-async function updateMin(name, value) {
-  await fetch('/api/min_stock', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name, value: parseFloat(value) || 0, warehouse: currentWarehouse}) });
-  await loadDashboard();
+// ─── Modal editar rollo ─────────────────────────────────────────────────────
+function openEditRollo(id, prod, metros, notas) {
+  document.getElementById('edit-id').value = id;
+  document.getElementById('edit-prod-lbl').textContent = prod;
+  document.getElementById('edit-metros').value = metros;
+  document.getElementById('edit-notas').value = notas;
+  document.getElementById('overlay-edit').classList.add('open');
+}
+function closeEditModal() {
+  document.getElementById('overlay-edit').classList.remove('open');
+}
+async function saveEdit() {
+  const id = document.getElementById('edit-id').value;
+  const metros = parseFloat(document.getElementById('edit-metros').value);
+  const notas  = document.getElementById('edit-notas').value.trim();
+  if (isNaN(metros) || metros < 0) { alert('Metros inválidos.'); return; }
+  await fetch(`/api/rollos/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ metros, notas })
+  });
+  closeEditModal();
+  loadRollos();
 }
 
-async function uploadFile(file) {
-  const status = document.getElementById('upload-status');
-  status.textContent = '⏳ Procesando...';
+// ─── Eliminar rollo ─────────────────────────────────────────────────────────
+async function deleteRollo(id) {
+  if (!confirm('¿Eliminar este rollo del inventario?')) return;
+  await fetch(`/api/rollos/${id}`, { method: 'DELETE' });
+  loadRollos();
+}
+
+// ─── Upload ─────────────────────────────────────────────────────────────────
+async function doUpload() {
+  const file = document.getElementById('upload-file').files[0];
+  const wh   = document.getElementById('upload-wh').value;
+  const msg  = document.getElementById('upload-msg');
+  if (!file) { msg.textContent = 'Selecciona un archivo.'; return; }
+  msg.innerHTML = 'Cargando... <span class="spinner"></span>';
   const fd = new FormData();
   fd.append('file', file);
-  fd.append('warehouse', currentWarehouse);
+  fd.append('warehouse', wh);
   try {
-    const res = await fetch('/api/upload', { method: 'POST', body: fd });
-    const data = await res.json();
+    const r = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await r.json();
     if (data.ok) {
-      status.textContent = `✓ ${file.name} — ${data.count} productos (${data.date})`;
-      await loadStatus();
-      await loadDashboard();
+      msg.innerHTML = `✅ Cargado correctamente. ${data.count} productos · fecha: <strong>${data.date}</strong>`;
     } else {
-      status.textContent = `✗ Error: ${data.error}`;
+      msg.textContent = '❌ Error: ' + (data.error || 'desconocido');
     }
   } catch(e) {
-    status.textContent = `✗ Error al subir archivo`;
+    msg.textContent = '❌ Error de conexión.';
   }
 }
 
-document.querySelectorAll('.wh-status').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.wh-status').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentWarehouse = btn.dataset.wh;
-    document.getElementById('upload-wh-label').innerHTML = `Almacén: <strong>${whNames[currentWarehouse]}</strong>`;
-    loadDashboard();
-  });
-});
-
-document.getElementById('file-input').addEventListener('change', e => { if (e.target.files[0]) uploadFile(e.target.files[0]); });
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
-dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); if(e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]); });
-
-document.querySelectorAll('.filter-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentFilter = btn.dataset.filter;
-    renderTable();
-  });
-});
-
-document.getElementById('search').addEventListener('input', e => { currentSearch = e.target.value; renderTable(); });
-document.getElementById('edit-mins-btn').addEventListener('click', () => {
-  editMode = !editMode;
-  document.getElementById('edit-mins-btn').textContent = editMode ? '✓ Listo' : '⚙ Editar mínimos';
-  renderTable();
-});
-
-loadStatus();
+// ─── Init ───────────────────────────────────────────────────────────────────
 loadDashboard();
 </script>
 </body>
