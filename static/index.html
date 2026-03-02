@@ -5,107 +5,59 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QG InnovAgro — Inventario</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #222; font-size: 14px; }
-
-  /* ── Navegación ─────────────────────────────────── */
-  .nav { background: #1B5E20; color: white; display: flex; align-items: center; gap: 0; padding: 0 16px; height: 48px; }
-  .nav-logo { font-weight: 700; font-size: 16px; margin-right: 24px; }
-  .nav-tab { padding: 14px 18px; cursor: pointer; opacity: .7; font-size: 13px; border-bottom: 3px solid transparent; }
-  .nav-tab.active { opacity: 1; border-bottom-color: #A5D6A7; }
-  .nav-tab:hover { opacity: 1; }
-  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  .wh-select { padding: 5px 10px; border-radius: 4px; border: none; font-size: 13px; background: #2E7D32; color: white; cursor: pointer; }
-  .wh-dot { width: 10px; height: 10px; border-radius: 50%; background: #aaa; display: inline-block; }
-  .wh-dot.fresh { background: #66BB6A; }
-  .wh-dot.stale  { background: #FFA726; }
-
-  /* ── Contenido ──────────────────────────────────── */
-  .page { display: none; padding: 20px; }
-  .page.active { display: block; }
-
-  /* ── Tarjetas resumen ───────────────────────────── */
-  .summary-cards { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
-  .card { background: white; border-radius: 8px; padding: 14px 18px; flex: 1; min-width: 140px;
-          box-shadow: 0 1px 4px rgba(0,0,0,.1); border-left: 4px solid #ccc; }
-  .card.green  { border-color: #4CAF50; }
-  .card.orange { border-color: #FF9800; }
-  .card.red    { border-color: #F44336; }
-  .card.blue   { border-color: #2196F3; }
-  .card-val { font-size: 28px; font-weight: 700; line-height: 1; }
-  .card-lbl { font-size: 11px; color: #777; margin-top: 4px; }
-
-  /* ── Tabla productos (dashboard) ───────────────── */
-  .toolbar { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
-  .toolbar input { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; width: 220px; }
-  .toolbar select { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-  .btn { padding: 6px 14px; border-radius: 4px; border: none; cursor: pointer; font-size: 13px; }
-  .btn-green  { background: #2E7D32; color: white; }
-  .btn-green:hover { background: #1B5E20; }
-  .btn-blue   { background: #1565C0; color: white; }
-  .btn-blue:hover { background: #0D47A1; }
-  .btn-red    { background: #C62828; color: white; }
-  .btn-red:hover { background: #b71c1c; }
-  .btn-outline { background: white; border: 1px solid #ccc; color: #333; }
-  .btn-outline:hover { background: #f5f5f5; }
-
-  table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;
-          box-shadow: 0 1px 4px rgba(0,0,0,.1); }
-  th { background: #E8F5E9; font-weight: 600; padding: 10px 12px; text-align: left; font-size: 12px;
-       color: #1B5E20; border-bottom: 2px solid #C8E6C9; white-space: nowrap; }
-  td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
-  tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #fafafa; }
-
-  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
-  .badge-ok      { background: #E8F5E9; color: #2E7D32; }
-  .badge-warn    { background: #FFF3E0; color: #E65100; }
-  .badge-urgente { background: #FFEBEE; color: #C62828; }
-  .badge-nd      { background: #F5F5F5; color: #777; }
-  .badge-jumbo   { background: #E3F2FD; color: #1565C0; }
-  .badge-rest    { background: #FFF8E1; color: #F57F17; }
-  .badge-vend    { background: #E8F5E9; color: #2E7D32; }
-  .badge-novend  { background: #FFEBEE; color: #C62828; }
-
-  /* ── Panel rollos ───────────────────────────────── */
-  .rollos-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
-  .rollos-header h2 { font-size: 16px; color: #1B5E20; }
-  .resumen-rollos { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .res-card { background: white; border-radius: 6px; padding: 10px 14px; box-shadow: 0 1px 3px rgba(0,0,0,.1); min-width: 120px; }
-  .res-val { font-size: 22px; font-weight: 700; }
-  .res-lbl { font-size: 10px; color: #888; }
-
-  /* ── Modal agregar rollo ────────────────────────── */
-  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; align-items: center; justify-content: center; }
-  .overlay.open { display: flex; }
-  .modal { background: white; border-radius: 10px; padding: 24px; width: 400px; max-width: 95vw; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
-  .modal h3 { margin-bottom: 16px; color: #1B5E20; }
-  .form-row { margin-bottom: 12px; }
-  .form-row label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; }
-  .form-row input, .form-row select, .form-row textarea {
-    width: 100%; padding: 8px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
-  .form-row textarea { resize: vertical; min-height: 60px; }
-  .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 18px; }
-
-  /* ── Upload ─────────────────────────────────────── */
-  .upload-box { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.1); max-width: 500px; }
-  .upload-box h3 { margin-bottom: 14px; color: #1B5E20; }
-  .info-box { background: #E8F5E9; border-radius: 6px; padding: 12px 14px; margin-top: 14px; font-size: 12px; color: #2E7D32; }
-  .tag { display: inline-block; background: #eee; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin: 2px; }
-
-  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: #2E7D32;
-             border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-left: 6px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
-
-  /* filtro producto en panel rollos */
-  .filter-prod { padding: 6px 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; min-width: 220px; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#222;font-size:14px}
+  .nav{background:#1B5E20;color:white;display:flex;align-items:center;padding:0 16px;height:48px;gap:0}
+  .nav-logo{font-weight:700;font-size:16px;margin-right:24px}
+  .nav-tab{padding:14px 18px;cursor:pointer;opacity:.7;font-size:13px;border-bottom:3px solid transparent;white-space:nowrap}
+  .nav-tab.active{opacity:1;border-bottom-color:#A5D6A7}
+  .nav-tab:hover{opacity:1}
+  .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .wh-select{padding:5px 10px;border-radius:4px;border:none;font-size:13px;background:#2E7D32;color:white;cursor:pointer}
+  .wh-dot{width:10px;height:10px;border-radius:50%;background:#aaa;display:inline-block}
+  .wh-dot.fresh{background:#66BB6A}.wh-dot.stale{background:#FFA726}
+  .page{display:none;padding:20px}.page.active{display:block}
+  .summary-cards{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+  .card{background:white;border-radius:8px;padding:14px 18px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,.1);border-left:4px solid #ccc}
+  .card.green{border-color:#4CAF50}.card.orange{border-color:#FF9800}.card.red{border-color:#F44336}.card.blue{border-color:#2196F3}
+  .card-val{font-size:28px;font-weight:700;line-height:1}.card-lbl{font-size:11px;color:#777;margin-top:4px}
+  .toolbar{display:flex;gap:10px;margin-bottom:12px;align-items:center;flex-wrap:wrap}
+  .toolbar input,.toolbar select,.filter-prod{padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px}
+  .toolbar input{width:220px}
+  .btn{padding:6px 14px;border-radius:4px;border:none;cursor:pointer;font-size:13px}
+  .btn-green{background:#2E7D32;color:white}.btn-green:hover{background:#1B5E20}
+  .btn-outline{background:white;border:1px solid #ccc;color:#333}.btn-outline:hover{background:#f5f5f5}
+  table{width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+  th{background:#E8F5E9;font-weight:600;padding:10px 12px;text-align:left;font-size:12px;color:#1B5E20;border-bottom:2px solid #C8E6C9;white-space:nowrap}
+  td{padding:9px 12px;border-bottom:1px solid #f0f0f0}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#fafafa}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+  .b-ok{background:#E8F5E9;color:#2E7D32}.b-warn{background:#FFF3E0;color:#E65100}
+  .b-urg{background:#FFEBEE;color:#C62828}.b-nd{background:#F5F5F5;color:#777}
+  .b-jumbo{background:#E3F2FD;color:#1565C0}.b-rest{background:#FFF8E1;color:#F57F17}
+  .b-dan{background:#FCE4EC;color:#880E4F}
+  .b-vend{background:#E8F5E9;color:#2E7D32}.b-novend{background:#FFEBEE;color:#C62828}
+  .tag{display:inline-block;background:#eee;padding:2px 8px;border-radius:10px;font-size:11px;margin:2px}
+  .resumen-rollos{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+  .res-card{background:white;border-radius:6px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,.1);min-width:120px}
+  .res-val{font-size:22px;font-weight:700}.res-lbl{font-size:10px;color:#888}
+  .upload-box{background:white;border-radius:8px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.1);max-width:500px}
+  .upload-box h3{margin-bottom:14px;color:#1B5E20}
+  .form-row{margin-bottom:12px}
+  .form-row label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
+  .form-row input,.form-row select{width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px}
+  .info-box{background:#E8F5E9;border-radius:6px;padding:12px 14px;margin-top:14px;font-size:12px;color:#2E7D32}
+  .spinner{display:inline-block;width:14px;height:14px;border:2px solid #ccc;border-top-color:#2E7D32;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-left:6px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .empty{text-align:center;padding:40px;color:#aaa;font-size:14px}
+  .rollos-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+  .rollos-header h2{font-size:16px;color:#1B5E20}
+  .note{margin-top:12px;font-size:12px;color:#888}
 </style>
 </head>
 <body>
 
-<!-- NAVEGACIÓN -->
 <div class="nav">
   <div class="nav-logo">🌱 QG InnovAgro</div>
   <div class="nav-tab active" onclick="showPage('dashboard',this)">Dashboard</div>
@@ -121,9 +73,9 @@
   </div>
 </div>
 
-<!-- ═══════════════ PÁGINA: DASHBOARD ═══════════════ -->
+<!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
-  <div id="dash-loading" style="padding:40px;text-align:center;color:#aaa;">Cargando...</div>
+  <div id="dash-loading" style="padding:40px;text-align:center;color:#aaa">Cargando...</div>
   <div id="dash-content" style="display:none">
     <div class="summary-cards" id="dash-cards"></div>
     <div class="toolbar">
@@ -131,7 +83,8 @@
       <select id="dash-cat" onchange="filterDash()">
         <option value="">Todas las categorías</option>
         <option>Transparente</option><option>Difusado</option><option>Blanco</option>
-        <option>Greenpro</option><option>Mulch</option><option>Rafia</option><option>Semilla</option><option>Otros</option>
+        <option>Greenpro</option><option>Mulch</option><option>Rafia</option>
+        <option>Semilla</option><option>NUF</option><option>Poscosecha</option><option>Otros</option>
       </select>
       <select id="dash-status" onchange="filterDash()">
         <option value="">Todos los estados</option>
@@ -143,8 +96,8 @@
     </div>
     <table>
       <thead><tr>
-        <th>Producto</th><th>Categoría</th><th>Total (m)</th>
-        <th>Consumo diario</th><th>Días restantes</th><th>Estado</th>
+        <th>Producto</th><th>Cat.</th><th>Total</th>
+        <th>Cons. diario</th><th>Días restantes</th><th>Estado</th>
       </tr></thead>
       <tbody id="dash-tbody"></tbody>
     </table>
@@ -152,44 +105,65 @@
   </div>
 </div>
 
-<!-- ═══════════════ PÁGINA: ROLLOS ═══════════════════ -->
+<!-- ROLLOS -->
 <div class="page" id="page-rollos">
   <div class="rollos-header">
-    <h2>🎞 Rollos de Plástico</h2>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <div>
+      <h2>🎞 Rollos de Plástico</h2>
+      <div id="rollos-date" style="font-size:12px;color:#777;margin-top:2px"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select class="filter-prod" id="rollos-prod-filter" onchange="loadRollos()">
         <option value="">Todos los productos</option>
       </select>
-      <button class="btn btn-green" onclick="openAddRollo()">+ Agregar rollo</button>
+      <select class="filter-prod" id="rollos-tipo-filter" onchange="loadRollos()" style="min-width:140px">
+        <option value="">Todos los tipos</option>
+        <option value="jumbo">Solo Jumbos</option>
+        <option value="restante">Solo Restantes</option>
+        <option value="danado">Dañados/Bi-color</option>
+      </select>
     </div>
   </div>
 
-  <!-- Resumen -->
   <div class="resumen-rollos" id="rollos-resumen"></div>
 
-  <!-- Tabla -->
-  <table>
-    <thead><tr>
-      <th>Producto</th><th>Metros</th><th>Tipo</th><th>¿Vendible?</th>
-      <th>Fecha registro</th><th>Notas</th><th>Acciones</th>
-    </tr></thead>
-    <tbody id="rollos-tbody"></tbody>
-  </table>
-  <div id="rollos-empty" class="empty" style="display:none">No hay rollos registrados.</div>
-
-  <div style="margin-top:12px;font-size:12px;color:#888;">
-    ⚠️ Un rollo se considera <strong>vendible</strong> cuando tiene ≥ 100 metros.
-    Un rollo <strong>jumbo</strong> puede cortarse en secciones para clientes.
+  <div class="toolbar" style="margin-bottom:10px">
+    <button class="btn btn-outline" id="btn-vista-resumen" onclick="setVista('resumen')" style="border-color:#1B5E20;color:#1B5E20">📊 Resumen por producto</button>
+    <button class="btn btn-outline" id="btn-vista-lista" onclick="setVista('lista')">📋 Lista de rollos</button>
   </div>
+
+  <div id="vista-resumen">
+    <table>
+      <thead><tr>
+        <th>Producto</th><th>Cat.</th>
+        <th>Jumbos</th><th>Restantes</th><th>Dañados</th>
+        <th>✅ Vendibles</th><th>❌ No vendibles</th>
+        <th>Total metros</th><th>Metros vendibles</th>
+      </tr></thead>
+      <tbody id="resumen-tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="vista-lista" style="display:none">
+    <table>
+      <thead><tr>
+        <th>Producto</th><th>Metros</th><th>Tipo</th><th>¿Vendible?</th>
+      </tr></thead>
+      <tbody id="rollos-tbody"></tbody>
+    </table>
+  </div>
+
+  <div id="rollos-empty" class="empty" style="display:none">No hay rollos registrados. Carga un Excel primero.</div>
+  <div class="note">ℹ️ Vendible = ≥ 100 metros y no dañado. Los jumbos pueden cortarse a medida del cliente.</div>
 </div>
 
-<!-- ═══════════════ PÁGINA: UPLOAD ═══════════════════ -->
+<!-- UPLOAD -->
 <div class="page" id="page-upload">
   <div class="upload-box">
     <h3>📂 Cargar reporte Excel</h3>
     <div class="form-row">
       <label>Almacén</label>
-      <select id="upload-wh" style="width:100%;padding:8px;border:1px solid #ccc;border-radius:4px;">
+      <select id="upload-wh">
         <option value="culiacan">Culiacán</option>
         <option value="cdmx">CDMX</option>
         <option value="oax">Oaxaca</option>
@@ -200,330 +174,166 @@
       <input type="file" id="upload-file" accept=".xlsx,.xls">
     </div>
     <button class="btn btn-green" onclick="doUpload()">Cargar</button>
-    <div id="upload-msg" style="margin-top:10px;font-size:13px;"></div>
+    <div id="upload-msg" style="margin-top:10px;font-size:13px"></div>
     <div class="info-box">
-      El archivo debe tener la misma estructura que el reporte habitual:<br>
-      fila 1 = título con fecha, fila 2 = encabezados, filas siguientes = productos con total al final.
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════ MODAL: AGREGAR ROLLO ═════════════ -->
-<div class="overlay" id="overlay-rollo">
-  <div class="modal">
-    <h3>+ Agregar rollo de plástico</h3>
-    <div class="form-row">
-      <label>Producto</label>
-      <input type="text" id="rollo-prod" placeholder="Ej: Transparente Ginegar 8m 200μ" list="rollo-prod-list">
-      <datalist id="rollo-prod-list"></datalist>
-    </div>
-    <div class="form-row">
-      <label>Metros</label>
-      <input type="number" id="rollo-metros" min="1" step="0.5" placeholder="Ej: 8500">
-    </div>
-    <div class="form-row">
-      <label>Tipo de rollo</label>
-      <select id="rollo-tipo">
-        <option value="jumbo">Jumbo (rollo completo — se puede cortar)</option>
-        <option value="restante">Restante / Sobrante</option>
-      </select>
-    </div>
-    <div class="form-row">
-      <label>Notas (opcional)</label>
-      <textarea id="rollo-notas" placeholder="Ej: Lote 2024-A, proveedor Ginegar..."></textarea>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-green" onclick="saveRollo()">Guardar</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════ MODAL: EDITAR METROS ════════════ -->
-<div class="overlay" id="overlay-edit">
-  <div class="modal">
-    <h3>✏️ Actualizar metros del rollo</h3>
-    <input type="hidden" id="edit-id">
-    <div class="form-row">
-      <label>Producto</label>
-      <div id="edit-prod-lbl" style="padding:6px;background:#f5f5f5;border-radius:4px;font-size:13px;"></div>
-    </div>
-    <div class="form-row">
-      <label>Metros actuales</label>
-      <input type="number" id="edit-metros" min="0" step="0.5">
-    </div>
-    <div class="form-row">
-      <label>Notas</label>
-      <textarea id="edit-notas"></textarea>
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-outline" onclick="closeEditModal()">Cancelar</button>
-      <button class="btn btn-blue" onclick="saveEdit()">Actualizar</button>
+      El sistema extrae automáticamente los rollos jumbos y restantes.<br><br>
+      <strong>Estructura del Excel:</strong> cols 1–23 = jumbos · col 28 = restos (formato "97+31") · col 29 = bi-color/dañado
     </div>
   </div>
 </div>
 
 <script>
-// ─── Estado ────────────────────────────────────────────────────────────────
-let currentWH = 'culiacan';
-let dashData = [];
-let rollosData = [];
-let productNames = new Set();
+let currentWH='culiacan', dashData=[], rollosData={rollos:[],resumen:[]}, currentVista='resumen';
 
-// ─── Navegación ────────────────────────────────────────────────────────────
-function showPage(name, tab) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  if (tab) tab.classList.add('active');
-  if (name === 'dashboard') loadDashboard();
-  if (name === 'rollos') loadRollos();
+function showPage(name,tab){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(tab)tab.classList.add('active');
+  if(name==='dashboard')loadDashboard();
+  if(name==='rollos')loadRollos();
+}
+function changeWarehouse(){
+  currentWH=document.getElementById('wh-select').value;
+  document.getElementById('upload-wh').value=currentWH;
+  const a=document.querySelector('.page.active').id.replace('page-','');
+  if(a==='dashboard')loadDashboard();
+  if(a==='rollos')loadRollos();
 }
 
-function changeWarehouse() {
-  currentWH = document.getElementById('wh-select').value;
-  document.getElementById('upload-wh').value = currentWH;
-  const activePage = document.querySelector('.page.active').id.replace('page-','');
-  if (activePage === 'dashboard') loadDashboard();
-  if (activePage === 'rollos') loadRollos();
-}
-
-// ─── Dashboard ─────────────────────────────────────────────────────────────
-async function loadDashboard() {
-  document.getElementById('dash-loading').style.display = '';
-  document.getElementById('dash-content').style.display = 'none';
-
-  try {
-    const r = await fetch(`/api/dashboard?warehouse=${currentWH}`);
-    const data = await r.json();
-
-    document.getElementById('dash-loading').style.display = 'none';
-    document.getElementById('dash-content').style.display = '';
-
-    if (!data.has_data) {
-      document.getElementById('dash-cards').innerHTML = '';
-      document.getElementById('dash-tbody').innerHTML = '';
-      document.getElementById('dash-empty').style.display = '';
-      document.getElementById('dash-empty').textContent = 'No hay datos. Carga un Excel primero.';
+async function loadDashboard(){
+  document.getElementById('dash-loading').style.display='';
+  document.getElementById('dash-content').style.display='none';
+  try{
+    const data=await(await fetch(`/api/dashboard?warehouse=${currentWH}`)).json();
+    document.getElementById('dash-loading').style.display='none';
+    document.getElementById('dash-content').style.display='';
+    if(!data.has_data){
+      document.getElementById('dash-cards').innerHTML='';
+      document.getElementById('dash-tbody').innerHTML='';
+      document.getElementById('dash-empty').style.display='';
+      document.getElementById('dash-empty').textContent='No hay datos. Carga un Excel primero.';
       return;
     }
-
-    dashData = data.products;
-    productNames = new Set(dashData.map(p => p.name));
-
-    // Cards resumen
-    const urgente = dashData.filter(p => p.status === 'urgente').length;
-    const pronto  = dashData.filter(p => p.status === 'pronto').length;
-    const ok      = dashData.filter(p => p.status === 'ok').length;
-    document.getElementById('dash-cards').innerHTML = `
-      <div class="card red"><div class="card-val">${urgente}</div><div class="card-lbl">🔴 URGENTE (&lt;90d)</div></div>
-      <div class="card orange"><div class="card-val">${pronto}</div><div class="card-lbl">🟡 PRONTO (90-120d)</div></div>
+    dashData=data.products;
+    const urg=dashData.filter(p=>p.status==='urgente').length;
+    const prn=dashData.filter(p=>p.status==='pronto').length;
+    const ok=dashData.filter(p=>p.status==='ok').length;
+    document.getElementById('dash-cards').innerHTML=`
+      <div class="card red"><div class="card-val">${urg}</div><div class="card-lbl">🔴 URGENTE (&lt;90d)</div></div>
+      <div class="card orange"><div class="card-val">${prn}</div><div class="card-lbl">🟡 PRONTO (90-120d)</div></div>
       <div class="card green"><div class="card-val">${ok}</div><div class="card-lbl">🟢 OK (&gt;120d)</div></div>
-      <div class="card blue"><div class="card-lbl" style="margin-top:6px">📅 Última carga</div><div style="font-size:13px;font-weight:600">${data.latest_date}</div></div>
-    `;
-
-    // Estado del almacén (frescura)
-    const dot = document.getElementById('wh-dot');
-    const today = new Date();
-    const parts = data.latest_date.split('/');
-    const lastDate = new Date(parts[2], parts[1]-1, parts[0]);
-    const diffDays = Math.floor((today - lastDate) / 86400000);
-    dot.className = 'wh-dot ' + (diffDays <= 7 ? 'fresh' : 'stale');
-
+      <div class="card blue"><div class="card-lbl" style="margin-top:6px">📅 Última carga</div><div style="font-size:13px;font-weight:600">${data.latest_date}</div></div>`;
+    const p=data.latest_date.split('/');
+    const diff=Math.floor((new Date()-new Date(p[2],p[1]-1,p[0]))/86400000);
+    document.getElementById('wh-dot').className='wh-dot '+(diff<=7?'fresh':'stale');
     filterDash();
-  } catch(e) {
-    document.getElementById('dash-loading').textContent = 'Error cargando datos.';
-  }
+  }catch(e){document.getElementById('dash-loading').textContent='Error.';}
 }
 
-function filterDash() {
-  const search = document.getElementById('dash-search').value.toLowerCase();
-  const cat    = document.getElementById('dash-cat').value;
-  const status = document.getElementById('dash-status').value;
+function filterDash(){
+  const search=document.getElementById('dash-search').value.toLowerCase();
+  const cat=document.getElementById('dash-cat').value;
+  const status=document.getElementById('dash-status').value;
+  const filtered=dashData.filter(p=>(!search||p.name.toLowerCase().includes(search))&&(!cat||p.cat===cat)&&(!status||p.status===status));
+  const sl={urgente:'🔴 Urgente',pronto:'🟡 Pronto',ok:'🟢 OK',sin_datos:'⚪ Sin datos'};
+  const sb={urgente:'b-urg',pronto:'b-warn',ok:'b-ok',sin_datos:'b-nd'};
+  const tbody=document.getElementById('dash-tbody');
+  if(!filtered.length){tbody.innerHTML='';document.getElementById('dash-empty').style.display='';return;}
+  document.getElementById('dash-empty').style.display='none';
+  tbody.innerHTML=filtered.map(p=>`<tr>
+    <td><strong>${p.name}</strong></td>
+    <td><span class="tag">${p.cat}</span></td>
+    <td>${Number(p.total).toLocaleString()}</td>
+    <td>${p.avg_daily!=null?p.avg_daily+' /día':'—'}</td>
+    <td>${p.days!=null?p.days+' días':'—'}</td>
+    <td><span class="badge ${sb[p.status]}">${sl[p.status]}</span></td>
+  </tr>`).join('');
+}
 
-  const filtered = dashData.filter(p =>
-    (!search || p.name.toLowerCase().includes(search)) &&
-    (!cat    || p.cat === cat) &&
-    (!status || p.status === status)
-  );
+async function loadRollos(){
+  const prod=document.getElementById('rollos-prod-filter').value;
+  const tipo=document.getElementById('rollos-tipo-filter').value;
+  let url=`/api/rollos?warehouse=${currentWH}`;
+  if(prod)url+=`&product=${encodeURIComponent(prod)}`;
+  if(tipo)url+=`&tipo=${tipo}`;
+  try{
+    const data=await(await fetch(url)).json();
+    rollosData=data;
+    document.getElementById('rollos-date').textContent=data.report_date?`Datos del ${data.report_date}`:'';
+    const allP=[...new Set(data.resumen.map(r=>r.product_name))].sort();
+    const sel=document.getElementById('rollos-prod-filter');
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Todos los productos</option>'+allP.map(p=>`<option value="${p}" ${p===cur?'selected':''}>${p}</option>`).join('');
+    let tj=0,tr=0,td=0,tv=0,tnv=0,tm=0;
+    data.resumen.forEach(r=>{tj+=Number(r.rollos_jumbo||0);tr+=Number(r.rollos_restante||0);td+=Number(r.rollos_danado||0);tv+=Number(r.rollos_vendibles||0);tnv+=Number(r.rollos_no_vendibles||0);tm+=Number(r.metros_total||0);});
+    document.getElementById('rollos-resumen').innerHTML=data.resumen.length===0?'':
+      `<div class="res-card"><div class="res-val" style="color:#1565C0">${tj}</div><div class="res-lbl">🔵 Jumbos</div></div>
+       <div class="res-card"><div class="res-val" style="color:#F57F17">${tr}</div><div class="res-lbl">🟡 Restantes</div></div>
+       <div class="res-card"><div class="res-val" style="color:#880E4F">${td}</div><div class="res-lbl">🔴 Dañados</div></div>
+       <div class="res-card"><div class="res-val" style="color:#2E7D32">${tv}</div><div class="res-lbl">✅ Vendibles</div></div>
+       <div class="res-card"><div class="res-val" style="color:#C62828">${tnv}</div><div class="res-lbl">❌ No vendibles</div></div>
+       <div class="res-card"><div class="res-val">${tm.toLocaleString()}</div><div class="res-lbl">📏 Total metros</div></div>`;
+    renderVista();
+  }catch(e){document.getElementById('rollos-empty').style.display='';}
+}
 
-  const statusLabel = { urgente:'🔴 Urgente', pronto:'🟡 Pronto', ok:'🟢 OK', sin_datos:'⚪ Sin datos' };
-  const statusBadge = { urgente:'badge-urgente', pronto:'badge-warn', ok:'badge-ok', sin_datos:'badge-nd' };
+function setVista(v){
+  currentVista=v;
+  ['resumen','lista'].forEach(x=>{
+    document.getElementById('btn-vista-'+x).style.borderColor=v===x?'#1B5E20':'#ccc';
+    document.getElementById('btn-vista-'+x).style.color=v===x?'#1B5E20':'#333';
+    document.getElementById('vista-'+x).style.display=v===x?'':'none';
+  });
+  renderVista();
+}
 
-  const tbody = document.getElementById('dash-tbody');
-  if (!filtered.length) {
-    tbody.innerHTML = '';
-    document.getElementById('dash-empty').style.display = '';
+function renderVista(){
+  const data=rollosData;
+  const empty=document.getElementById('rollos-empty');
+  if(!data.resumen||data.resumen.length===0){
+    empty.style.display='';
+    document.getElementById('resumen-tbody').innerHTML='';
+    document.getElementById('rollos-tbody').innerHTML='';
     return;
   }
-  document.getElementById('dash-empty').style.display = 'none';
-  tbody.innerHTML = filtered.map(p => `
-    <tr>
-      <td><strong>${p.name}</strong></td>
-      <td><span class="tag">${p.cat}</span></td>
-      <td>${p.total.toLocaleString()} m</td>
-      <td>${p.avg_daily != null ? p.avg_daily + ' m/día' : '—'}</td>
-      <td>${p.days != null ? p.days + ' días' : '—'}</td>
-      <td><span class="badge ${statusBadge[p.status]}">${statusLabel[p.status]}</span></td>
-    </tr>
-  `).join('');
-}
-
-// ─── Rollos ─────────────────────────────────────────────────────────────────
-async function loadRollos() {
-  const prodFilter = document.getElementById('rollos-prod-filter').value;
-  let url = `/api/rollos?warehouse=${currentWH}`;
-  if (prodFilter) url += `&product=${encodeURIComponent(prodFilter)}`;
-
-  try {
-    const r = await fetch(url);
-    const data = await r.json();
-    rollosData = data.rollos;
-
-    // Actualizar lista de productos en el filtro y en datalist
-    const allProds = [...new Set(data.resumen.map(r => r.product_name))].sort();
-    const filterSel = document.getElementById('rollos-prod-filter');
-    const currentVal = filterSel.value;
-    filterSel.innerHTML = '<option value="">Todos los productos</option>' +
-      allProds.map(p => `<option value="${p}" ${p===currentVal?'selected':''}>${p}</option>`).join('');
-
-    const dl = document.getElementById('rollo-prod-list');
-    dl.innerHTML = allProds.map(p => `<option value="${p}">`).join('');
-
-    // Resumen cards
-    const resDiv = document.getElementById('rollos-resumen');
-    if (data.resumen.length === 0) {
-      resDiv.innerHTML = '';
-    } else {
-      let totalJumbo = 0, totalRest = 0, totalVend = 0, totalNoVend = 0, totalMetros = 0;
-      data.resumen.forEach(r => {
-        totalJumbo  += Number(r.rollos_jumbo || 0);
-        totalRest   += Number(r.rollos_restante || 0);
-        totalVend   += Number(r.rollos_vendibles || 0);
-        totalNoVend += Number(r.rollos_no_vendibles || 0);
-        totalMetros += Number(r.metros_total || 0);
-      });
-      resDiv.innerHTML = `
-        <div class="res-card"><div class="res-val" style="color:#1565C0">${totalJumbo}</div><div class="res-lbl">Rollos Jumbo</div></div>
-        <div class="res-card"><div class="res-val" style="color:#F57F17">${totalRest}</div><div class="res-lbl">Restantes</div></div>
-        <div class="res-card"><div class="res-val" style="color:#2E7D32">${totalVend}</div><div class="res-lbl">✅ Vendibles (≥100m)</div></div>
-        <div class="res-card"><div class="res-val" style="color:#C62828">${totalNoVend}</div><div class="res-lbl">❌ No vendibles (&lt;100m)</div></div>
-        <div class="res-card"><div class="res-val" style="color:#333">${totalMetros.toLocaleString()}</div><div class="res-lbl">Total metros</div></div>
-      `;
-    }
-
-    // Tabla de rollos
-    const tbody = document.getElementById('rollos-tbody');
-    const empty = document.getElementById('rollos-empty');
-    if (!rollosData.length) {
-      tbody.innerHTML = '';
-      empty.style.display = '';
-      return;
-    }
-    empty.style.display = 'none';
-    tbody.innerHTML = rollosData.map(r => `
-      <tr>
-        <td><strong>${r.product_name}</strong></td>
-        <td><strong>${Number(r.metros).toLocaleString()} m</strong></td>
-        <td><span class="badge ${r.tipo === 'jumbo' ? 'badge-jumbo' : 'badge-rest'}">
-          ${r.tipo === 'jumbo' ? '🔵 Jumbo' : '🟡 Restante'}</span></td>
-        <td><span class="badge ${r.vendible ? 'badge-vend' : 'badge-novend'}">
-          ${r.vendible ? '✅ Sí' : '❌ No'}</span></td>
-        <td>${new Date(r.fecha_registro).toLocaleDateString('es-MX')}</td>
-        <td style="color:#777;font-size:12px">${r.notas || '—'}</td>
-        <td>
-          <button class="btn btn-outline" style="font-size:11px;padding:3px 8px" onclick="openEditRollo(${r.id},'${r.product_name.replace(/'/g,"\\'")}',${r.metros},'${(r.notas||'').replace(/'/g,"\\'")}')">✏️</button>
-          <button class="btn btn-red" style="font-size:11px;padding:3px 8px;margin-left:4px" onclick="deleteRollo(${r.id})">🗑</button>
-        </td>
-      </tr>
-    `).join('');
-  } catch(e) {
-    document.getElementById('rollos-tbody').innerHTML = '<tr><td colspan="7" style="color:red;padding:20px">Error cargando rollos.</td></tr>';
+  empty.style.display='none';
+  if(currentVista==='resumen'){
+    document.getElementById('resumen-tbody').innerHTML=data.resumen.map(r=>`<tr>
+      <td style="max-width:320px;font-size:12px">${r.product_name}</td>
+      <td><span class="tag">${r.cat}</span></td>
+      <td><span class="badge b-jumbo">${r.rollos_jumbo||0}</span></td>
+      <td><span class="badge b-rest">${r.rollos_restante||0}</span></td>
+      <td>${r.rollos_danado>0?`<span class="badge b-dan">${r.rollos_danado}</span>`:'—'}</td>
+      <td><strong style="color:#2E7D32">${r.rollos_vendibles||0}</strong></td>
+      <td>${r.rollos_no_vendibles>0?`<span style="color:#C62828">${r.rollos_no_vendibles}</span>`:'—'}</td>
+      <td>${Number(r.metros_total||0).toLocaleString()} m</td>
+      <td>${Number(r.metros_vendibles||0).toLocaleString()} m</td>
+    </tr>`).join('');
+  }else{
+    document.getElementById('rollos-tbody').innerHTML=data.rollos.map(r=>`<tr>
+      <td style="font-size:12px;max-width:280px">${r.product_name}</td>
+      <td><strong>${Number(r.metros).toLocaleString()} m</strong></td>
+      <td><span class="badge ${r.tipo==='jumbo'?'b-jumbo':r.tipo==='restante'?'b-rest':'b-dan'}">${r.tipo==='jumbo'?'🔵 Jumbo':r.tipo==='restante'?'🟡 Restante':'🔴 Dañado'}</span></td>
+      <td><span class="badge ${r.vendible?'b-vend':'b-novend'}">${r.vendible?'✅ Sí':'❌ No'}</span></td>
+    </tr>`).join('');
   }
 }
 
-// ─── Modal agregar rollo ────────────────────────────────────────────────────
-function openAddRollo() {
-  document.getElementById('rollo-prod').value = '';
-  document.getElementById('rollo-metros').value = '';
-  document.getElementById('rollo-tipo').value = 'jumbo';
-  document.getElementById('rollo-notas').value = '';
-  document.getElementById('overlay-rollo').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('overlay-rollo').classList.remove('open');
-}
-async function saveRollo() {
-  const prod   = document.getElementById('rollo-prod').value.trim();
-  const metros = parseFloat(document.getElementById('rollo-metros').value);
-  const tipo   = document.getElementById('rollo-tipo').value;
-  const notas  = document.getElementById('rollo-notas').value.trim();
-  if (!prod || isNaN(metros) || metros <= 0) { alert('Completa producto y metros.'); return; }
-  await fetch('/api/rollos', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ warehouse: currentWH, product_name: prod, metros, tipo, notas })
-  });
-  closeModal();
-  loadRollos();
+async function doUpload(){
+  const file=document.getElementById('upload-file').files[0];
+  const wh=document.getElementById('upload-wh').value;
+  const msg=document.getElementById('upload-msg');
+  if(!file){msg.textContent='Selecciona un archivo.';return;}
+  msg.innerHTML='Cargando... <span class="spinner"></span>';
+  const fd=new FormData();fd.append('file',file);fd.append('warehouse',wh);
+  try{
+    const data=await(await fetch('/api/upload',{method:'POST',body:fd})).json();
+    if(data.ok)msg.innerHTML=`✅ Cargado. <strong>${data.products}</strong> productos · <strong>${data.rollos}</strong> rollos · fecha: <strong>${data.date}</strong>`;
+    else msg.textContent='❌ Error: '+(data.error||'desconocido');
+  }catch(e){msg.textContent='❌ Error de conexión.';}
 }
 
-// ─── Modal editar rollo ─────────────────────────────────────────────────────
-function openEditRollo(id, prod, metros, notas) {
-  document.getElementById('edit-id').value = id;
-  document.getElementById('edit-prod-lbl').textContent = prod;
-  document.getElementById('edit-metros').value = metros;
-  document.getElementById('edit-notas').value = notas;
-  document.getElementById('overlay-edit').classList.add('open');
-}
-function closeEditModal() {
-  document.getElementById('overlay-edit').classList.remove('open');
-}
-async function saveEdit() {
-  const id = document.getElementById('edit-id').value;
-  const metros = parseFloat(document.getElementById('edit-metros').value);
-  const notas  = document.getElementById('edit-notas').value.trim();
-  if (isNaN(metros) || metros < 0) { alert('Metros inválidos.'); return; }
-  await fetch(`/api/rollos/${id}`, {
-    method: 'PUT',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ metros, notas })
-  });
-  closeEditModal();
-  loadRollos();
-}
-
-// ─── Eliminar rollo ─────────────────────────────────────────────────────────
-async function deleteRollo(id) {
-  if (!confirm('¿Eliminar este rollo del inventario?')) return;
-  await fetch(`/api/rollos/${id}`, { method: 'DELETE' });
-  loadRollos();
-}
-
-// ─── Upload ─────────────────────────────────────────────────────────────────
-async function doUpload() {
-  const file = document.getElementById('upload-file').files[0];
-  const wh   = document.getElementById('upload-wh').value;
-  const msg  = document.getElementById('upload-msg');
-  if (!file) { msg.textContent = 'Selecciona un archivo.'; return; }
-  msg.innerHTML = 'Cargando... <span class="spinner"></span>';
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('warehouse', wh);
-  try {
-    const r = await fetch('/api/upload', { method: 'POST', body: fd });
-    const data = await r.json();
-    if (data.ok) {
-      msg.innerHTML = `✅ Cargado correctamente. ${data.count} productos · fecha: <strong>${data.date}</strong>`;
-    } else {
-      msg.textContent = '❌ Error: ' + (data.error || 'desconocido');
-    }
-  } catch(e) {
-    msg.textContent = '❌ Error de conexión.';
-  }
-}
-
-// ─── Init ───────────────────────────────────────────────────────────────────
 loadDashboard();
 </script>
 </body>
