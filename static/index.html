@@ -42,8 +42,8 @@
   .resumen-rollos{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
   .res-card{background:white;border-radius:6px;padding:10px 14px;box-shadow:0 1px 3px rgba(0,0,0,.1);min-width:120px}
   .res-val{font-size:22px;font-weight:700}.res-lbl{font-size:10px;color:#888}
-  .upload-box{background:white;border-radius:8px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.1);max-width:500px}
-  .upload-box h3{margin-bottom:14px;color:#1B5E20}
+  .upload-box,.config-box{background:white;border-radius:8px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.1);max-width:500px}
+  .upload-box h3,.config-box h3{margin-bottom:14px;color:#1B5E20}
   .form-row{margin-bottom:12px}
   .form-row label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
   .form-row input,.form-row select{width:100%;padding:8px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px}
@@ -54,6 +54,14 @@
   .rollos-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
   .rollos-header h2{font-size:16px;color:#1B5E20}
   .note{margin-top:12px;font-size:12px;color:#888}
+  .config-row{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f0f0f0}
+  .config-row:last-child{border-bottom:none}
+  .config-lbl{flex:1}
+  .config-lbl strong{display:block;font-size:13px}
+  .config-lbl span{font-size:11px;color:#888}
+  .config-input{width:100px;padding:6px 10px;border:1px solid #ccc;border-radius:4px;font-size:13px;text-align:center}
+  .msg-ok{color:#2E7D32;font-size:12px;margin-top:6px}
+  .msg-err{color:#C62828;font-size:12px;margin-top:6px}
 </style>
 </head>
 <body>
@@ -63,6 +71,7 @@
   <div class="nav-tab active" onclick="showPage('dashboard',this)">Dashboard</div>
   <div class="nav-tab" onclick="showPage('rollos',this)">Rollos de Plástico</div>
   <div class="nav-tab" onclick="showPage('upload',this)">Cargar Excel</div>
+  <div class="nav-tab" onclick="showPage('config',this)">⚙️ Configuración</div>
   <div class="nav-right">
     <span class="wh-dot" id="wh-dot"></span>
     <select class="wh-select" id="wh-select" onchange="changeWarehouse()">
@@ -124,14 +133,11 @@
       </select>
     </div>
   </div>
-
   <div class="resumen-rollos" id="rollos-resumen"></div>
-
   <div class="toolbar" style="margin-bottom:10px">
     <button class="btn btn-outline" id="btn-vista-resumen" onclick="setVista('resumen')" style="border-color:#1B5E20;color:#1B5E20">📊 Resumen por producto</button>
     <button class="btn btn-outline" id="btn-vista-lista" onclick="setVista('lista')">📋 Lista de rollos</button>
   </div>
-
   <div id="vista-resumen">
     <table>
       <thead><tr>
@@ -143,7 +149,6 @@
       <tbody id="resumen-tbody"></tbody>
     </table>
   </div>
-
   <div id="vista-lista" style="display:none">
     <table>
       <thead><tr>
@@ -152,9 +157,8 @@
       <tbody id="rollos-tbody"></tbody>
     </table>
   </div>
-
   <div id="rollos-empty" class="empty" style="display:none">No hay rollos registrados. Carga un Excel primero.</div>
-  <div class="note">ℹ️ Vendible = ≥ 100 metros y no dañado. Los jumbos pueden cortarse a medida del cliente.</div>
+  <div class="note" id="rollos-note">ℹ️ Vendible = ≥ 100 metros y no dañado.</div>
 </div>
 
 <!-- UPLOAD -->
@@ -177,7 +181,32 @@
     <div id="upload-msg" style="margin-top:10px;font-size:13px"></div>
     <div class="info-box">
       El sistema extrae automáticamente los rollos jumbos y restantes.<br><br>
-      <strong>Estructura del Excel:</strong> cols 1–23 = jumbos · col 28 = restos (formato "97+31") · col 29 = bi-color/dañado
+      <strong>Estructura del Excel:</strong> cols 1–23 = jumbos · col 28 = restos · col 29 = bi-color/dañado
+    </div>
+  </div>
+</div>
+
+<!-- CONFIGURACIÓN -->
+<div class="page" id="page-config">
+  <div class="config-box">
+    <h3>⚙️ Configuración</h3>
+    <div class="config-row">
+      <div class="config-lbl">
+        <strong>Mínimo de metros para rollo vendible</strong>
+        <span>Un rollo con menos metros que este valor se marcará como "No vendible"</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="number" class="config-input" id="cfg-min-metros" min="1" step="1" value="100">
+        <span style="font-size:12px;color:#777">metros</span>
+      </div>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-green" onclick="saveConfig()">Guardar cambios</button>
+      <div id="config-msg" style="margin-top:8px;font-size:12px"></div>
+    </div>
+    <div class="info-box" style="margin-top:16px">
+      ⚠️ Al cambiar este valor, el cambio aplicará a partir de la próxima carga de Excel.
+      Los datos actuales no se recalcularán automáticamente.
     </div>
   </div>
 </div>
@@ -192,7 +221,9 @@ function showPage(name,tab){
   if(tab)tab.classList.add('active');
   if(name==='dashboard')loadDashboard();
   if(name==='rollos')loadRollos();
+  if(name==='config')loadConfig();
 }
+
 function changeWarehouse(){
   currentWH=document.getElementById('wh-select').value;
   document.getElementById('upload-wh').value=currentWH;
@@ -261,6 +292,7 @@ async function loadRollos(){
     const data=await(await fetch(url)).json();
     rollosData=data;
     document.getElementById('rollos-date').textContent=data.report_date?`Datos del ${data.report_date}`:'';
+    document.getElementById('rollos-note').textContent=`ℹ️ Vendible = ≥ ${data.min_metros_vendible} metros y no dañado.`;
     const allP=[...new Set(data.resumen.map(r=>r.product_name))].sort();
     const sel=document.getElementById('rollos-prod-filter');
     const cur=sel.value;
@@ -332,6 +364,25 @@ async function doUpload(){
     if(data.ok)msg.innerHTML=`✅ Cargado. <strong>${data.products}</strong> productos · <strong>${data.rollos}</strong> rollos · fecha: <strong>${data.date}</strong>`;
     else msg.textContent='❌ Error: '+(data.error||'desconocido');
   }catch(e){msg.textContent='❌ Error de conexión.';}
+}
+
+async function loadConfig(){
+  try{
+    const data=await(await fetch('/api/config')).json();
+    if(data.min_metros_vendible) document.getElementById('cfg-min-metros').value=data.min_metros_vendible;
+  }catch(e){}
+}
+
+async function saveConfig(){
+  const val=parseInt(document.getElementById('cfg-min-metros').value);
+  const msg=document.getElementById('config-msg');
+  if(!val||val<1){msg.textContent='⚠️ Ingresa un número válido.';msg.className='msg-err';return;}
+  try{
+    const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({min_metros_vendible:val})});
+    const data=await r.json();
+    if(data.ok){msg.textContent=`✅ Guardado. Mínimo: ${val} metros.`;msg.className='msg-ok';}
+    else{msg.textContent='❌ Error al guardar.';msg.className='msg-err';}
+  }catch(e){msg.textContent='❌ Error de conexión.';msg.className='msg-err';}
 }
 
 loadDashboard();
