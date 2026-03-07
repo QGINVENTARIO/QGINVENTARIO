@@ -1,3 +1,38 @@
+<!--
+=============================================================
+  QG InnovAgro — Inventory System
+  Version: 1.3.0
+=============================================================
+
+  VERSION HISTORY
+  ---------------------------------------------------------------
+  v1.3.0 (2026-03-07)
+    - Added inline min. stock editing directly from the dashboard table
+    - Added per-product min. order qty configuration in Settings tab
+    - Added search/filter to Settings product table
+    - "Below min. qty" warning badge on dashboard rows
+
+  v1.2.0
+    - Added Rolls (Rollos) tab with summary and list views
+    - Summary view: jumbos, remnants, damaged, saleable/not-saleable counts
+    - List view: individual roll detail with saleable flag
+    - Product and type filters for rolls
+    - Configurable minimum meters for a saleable roll (Settings)
+
+  v1.1.0
+    - Added Settings tab with configurable min. saleable roll length
+    - Warehouse freshness indicator (green/amber dot) based on upload date
+    - Days-left calculation from daily usage average
+    - Status badges: Urgent (<90d), Soon (90-120d), OK (>120d), No data
+
+  v1.0.0
+    - Initial release
+    - Dashboard with summary cards (Urgent / Soon / OK)
+    - Product table with category and status filters
+    - Upload Excel report per warehouse (Culiacán, CDMX, Oaxaca)
+    - Automatic extraction of rolls from plastic product columns
+=============================================================
+-->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -86,6 +121,7 @@
   <div class="nav-tab" onclick="showPage('upload',this)">Upload Excel</div>
   <div class="nav-tab" onclick="showPage('config',this)">⚙️ Settings</div>
   <div class="nav-right">
+    <span style="font-size:11px;opacity:.5;margin-right:4px">v1.3.0</span>
     <span class="wh-dot" id="wh-dot"></span>
     <select class="wh-select" id="wh-select" onchange="changeWarehouse()">
       <option value="culiacan">Culiacán</option>

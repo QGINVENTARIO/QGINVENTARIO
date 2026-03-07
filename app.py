@@ -3,10 +3,13 @@ import os, openpyxl, re
 from datetime import datetime
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = Flask(__name__, static_folder='static')
 
-DATABASE_URL = os.environ.get('DATABASE_URL', 'postgresql://postgres.oivclhmawflchbkusaab:Qgsistemas2026!@aws-1-eu-central-1.pooler.supabase.com:6543/postgres')
+DATABASE_URL = os.environ.get('DATABASE_URL')
 WAREHOUSES = ['culiacan', 'cdmx', 'oax']
 
 def get_conn():
