@@ -217,6 +217,7 @@ def dashboard():
     cur.execute('SELECT name, cat, min_stock FROM products WHERE warehouse = %s', (warehouse,))
     products_meta = {r['name']: {'cat': r['cat'], 'min_stock': r['min_stock']} for r in cur.fetchall()}
     avg_consumption = {}
+    snapshot_pairs = {}
     for i in range(1, len(sorted_dates)):
         prev_date = sorted_dates[i-1]
         curr_date = sorted_dates[i]
@@ -225,10 +226,12 @@ def dashboard():
         cur.execute('SELECT product_name, total FROM snapshots WHERE warehouse = %s AND report_date = %s', (warehouse, curr_date))
         curr_snap = {r['product_name']: r['total'] for r in cur.fetchall()}
         for name in curr_snap:
-            if name in prev and prev[name] > curr_snap[name]:
-                consumed = prev[name] - curr_snap[name]
-                if name not in avg_consumption: avg_consumption[name] = []
-                avg_consumption[name].append(consumed)
+            if name in prev:
+                snapshot_pairs[name] = snapshot_pairs.get(name, 0) + 1
+                if prev[name] > curr_snap[name]:
+                    consumed = prev[name] - curr_snap[name]
+                    if name not in avg_consumption: avg_consumption[name] = []
+                    avg_consumption[name].append(consumed)
     cur.close(); conn.close()
     result = []
     for name, total in latest.items():
@@ -236,7 +239,8 @@ def dashboard():
         hist = avg_consumption.get(name, [])
         avg = sum(hist) / len(hist) if hist else None
         days = int(total / avg) if avg and avg > 0 else None
-        if days is None: status = 'sin_datos'
+        if days is None and snapshot_pairs.get(name, 0) > 0: status = 'estancado'
+        elif days is None: status = 'sin_datos'
         elif days <= 90: status = 'urgente'
         elif days <= 120: status = 'pronto'
         else: status = 'ok'
@@ -246,7 +250,7 @@ def dashboard():
             'avg_daily': round(avg, 1) if avg else None,
             'days': days, 'status': status, 'history_days': len(hist)
         })
-    order = {'urgente': 0, 'pronto': 1, 'ok': 2, 'sin_datos': 3}
+    order = {'urgente': 0, 'pronto': 1, 'ok': 2, 'estancado': 3, 'sin_datos': 4}
     result.sort(key=lambda x: order.get(x['status'], 3))
     return jsonify({'products': result, 'has_data': True, 'latest_date': latest_date, 'total_days_history': len(sorted_dates)})
 

@@ -1,11 +1,18 @@
 <!--
 =============================================================
   QG InnovAgro — Inventory System
-  Version: 1.3.0
+  Version: 1.4.0
 =============================================================
 
   VERSION HISTORY
   ---------------------------------------------------------------
+  v1.4.0 (2026-03-08)
+    - Nuevo estado "Sin rotación": productos con historial pero sin consumo detectado
+    - Colores de fondo por fila según estado (urgente=rojo, pronto=amarillo, sin rotación=azul)
+    - Tarjeta de resumen "Sin rotación" en el dashboard
+    - Textos del dashboard traducidos al español
+    - Filtro de estado actualizado con opciones en español
+
   v1.3.0 (2026-03-07)
     - Added inline min. stock editing directly from the dashboard table
     - Added per-product min. order qty configuration in Settings tab
@@ -67,9 +74,16 @@
   td{padding:9px 12px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
   tr:last-child td{border-bottom:none}
   tr:hover td{background:#fafafa}
+  tr.row-urg td{background:#FFF5F5}
+  tr.row-urg:hover td{background:#FFE8E8}
+  tr.row-prn td{background:#FFFBF0}
+  tr.row-prn:hover td{background:#FFF3D6}
+  tr.row-est td{background:#F0F4FF}
+  tr.row-est:hover td{background:#E3EAFF}
   .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
   .b-ok{background:#E8F5E9;color:#2E7D32}.b-warn{background:#FFF3E0;color:#E65100}
   .b-urg{background:#FFEBEE;color:#C62828}.b-nd{background:#F5F5F5;color:#777}
+  .b-est{background:#E8EAF6;color:#283593}
   .b-jumbo{background:#E3F2FD;color:#1565C0}.b-rest{background:#FFF8E1;color:#F57F17}
   .b-dan{background:#FCE4EC;color:#880E4F}
   .b-vend{background:#E8F5E9;color:#2E7D32}.b-novend{background:#FFEBEE;color:#C62828}
@@ -121,7 +135,7 @@
   <div class="nav-tab" onclick="showPage('upload',this)">Upload Excel</div>
   <div class="nav-tab" onclick="showPage('config',this)">⚙️ Settings</div>
   <div class="nav-right">
-    <span style="font-size:11px;opacity:.5;margin-right:4px">v1.3.0</span>
+    <span style="font-size:11px;opacity:.5;margin-right:4px">v1.4.0</span>
     <span class="wh-dot" id="wh-dot"></span>
     <select class="wh-select" id="wh-select" onchange="changeWarehouse()">
       <option value="culiacan">Culiacán</option>
@@ -145,11 +159,12 @@
         <option>Semilla</option><option>NUF</option><option>Poscosecha</option><option>Otros</option>
       </select>
       <select id="dash-status" onchange="filterDash()">
-        <option value="">All statuses</option>
-        <option value="urgente">🔴 Urgent</option>
-        <option value="pronto">🟡 Soon</option>
+        <option value="">Todos los estados</option>
+        <option value="urgente">🔴 Urgente</option>
+        <option value="pronto">🟡 Pronto</option>
         <option value="ok">🟢 OK</option>
-        <option value="sin_datos">⚪ No data</option>
+        <option value="estancado">🔵 Sin rotación</option>
+        <option value="sin_datos">⚪ Sin datos</option>
       </select>
     </div>
     <table>
@@ -321,13 +336,15 @@ async function loadDashboard(){
     const urg=dashData.filter(p=>p.status==='urgente').length;
     const prn=dashData.filter(p=>p.status==='pronto').length;
     const ok=dashData.filter(p=>p.status==='ok').length;
+    const est=dashData.filter(p=>p.status==='estancado').length;
     const low=dashData.filter(p=>p.min_stock>0&&p.total<p.min_stock).length;
     document.getElementById('dash-cards').innerHTML=`
-      <div class="card red"><div class="card-val">${urg}</div><div class="card-lbl">🔴 URGENT (&lt;90d)</div></div>
-      <div class="card orange"><div class="card-val">${prn}</div><div class="card-lbl">🟡 SOON (90-120d)</div></div>
+      <div class="card red"><div class="card-val">${urg}</div><div class="card-lbl">🔴 URGENTE (&lt;90d)</div></div>
+      <div class="card orange"><div class="card-val">${prn}</div><div class="card-lbl">🟡 PRONTO (90-120d)</div></div>
       <div class="card green"><div class="card-val">${ok}</div><div class="card-lbl">🟢 OK (&gt;120d)</div></div>
-      ${low>0?`<div class="card red"><div class="card-val">${low}</div><div class="card-lbl">⚠️ Below min. qty</div></div>`:''}
-      <div class="card blue"><div class="card-lbl" style="margin-top:6px">📅 Last upload</div><div style="font-size:13px;font-weight:600">${data.latest_date}</div></div>`;
+      ${est>0?`<div class="card blue"><div class="card-val">${est}</div><div class="card-lbl">🔵 Sin rotación</div></div>`:''}
+      ${low>0?`<div class="card red"><div class="card-val">${low}</div><div class="card-lbl">⚠️ Bajo mínimo</div></div>`:''}
+      <div class="card blue"><div class="card-lbl" style="margin-top:6px">📅 Última carga</div><div style="font-size:13px;font-weight:600">${data.latest_date}</div></div>`;
     const p=data.latest_date.split('/');
     const diff=Math.floor((new Date()-new Date(p[2],p[1]-1,p[0]))/86400000);
     document.getElementById('wh-dot').className='wh-dot '+(diff<=7?'fresh':'stale');
@@ -340,15 +357,16 @@ function filterDash(){
   const cat=document.getElementById('dash-cat').value;
   const status=document.getElementById('dash-status').value;
   const filtered=dashData.filter(p=>(!search||p.name.toLowerCase().includes(search))&&(!cat||p.cat===cat)&&(!status||p.status===status));
-  const sl={urgente:'🔴 Urgent',pronto:'🟡 Soon',ok:'🟢 OK',sin_datos:'⚪ No data'};
-  const sb={urgente:'b-urg',pronto:'b-warn',ok:'b-ok',sin_datos:'b-nd'};
+  const sl={urgente:'🔴 Urgente',pronto:'🟡 Pronto',ok:'🟢 OK',estancado:'🔵 Sin rotación',sin_datos:'⚪ Sin datos'};
+  const sb={urgente:'b-urg',pronto:'b-warn',ok:'b-ok',estancado:'b-est',sin_datos:'b-nd'};
+  const rb={urgente:'row-urg',pronto:'row-prn',ok:'',estancado:'row-est',sin_datos:''};
   const tbody=document.getElementById('dash-tbody');
   if(!filtered.length){tbody.innerHTML='';document.getElementById('dash-empty').style.display='';return;}
   document.getElementById('dash-empty').style.display='none';
   tbody.innerHTML=filtered.map(p=>{
     const belowMin=p.min_stock>0&&p.total<p.min_stock;
-    return `<tr>
-      <td><strong>${p.name}</strong>${belowMin?` <span class="badge b-low">⚠️ Low</span>`:''}</td>
+    return `<tr class="${rb[p.status]||''}">
+      <td><strong>${p.name}</strong>${belowMin?` <span class="badge b-low">⚠️ Bajo mínimo</span>`:''}</td>
       <td><span class="tag">${p.cat}</span></td>
       <td>${Number(p.total).toLocaleString()}</td>
       <td>${p.avg_daily!=null?p.avg_daily+' /day':'—'}</td>
