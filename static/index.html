@@ -131,9 +131,9 @@
 <div class="nav">
   <div class="nav-logo">🌱 QG InnovAgro</div>
   <div class="nav-tab active" onclick="showPage('dashboard',this)">Dashboard</div>
-  <div class="nav-tab" onclick="showPage('rollos',this)">Rolls</div>
-  <div class="nav-tab" onclick="showPage('upload',this)">Upload Excel</div>
-  <div class="nav-tab" onclick="showPage('config',this)">⚙️ Settings</div>
+  <div class="nav-tab" onclick="showPage('rollos',this)">Rollos</div>
+  <div class="nav-tab" onclick="showPage('upload',this)">Subir Excel</div>
+  <div class="nav-tab" onclick="showPage('config',this)">⚙️ Configuración</div>
   <div class="nav-right">
     <span style="font-size:11px;opacity:.5;margin-right:4px">v1.4.0</span>
     <span class="wh-dot" id="wh-dot"></span>
@@ -147,13 +147,13 @@
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
-  <div id="dash-loading" style="padding:40px;text-align:center;color:#aaa">Loading...</div>
+  <div id="dash-loading" style="padding:40px;text-align:center;color:#aaa">Cargando...</div>
   <div id="dash-content" style="display:none">
     <div class="summary-cards" id="dash-cards"></div>
     <div class="toolbar">
-      <input type="text" id="dash-search" placeholder="Search product..." oninput="filterDash()">
+      <input type="text" id="dash-search" placeholder="Buscar producto..." oninput="filterDash()">
       <select id="dash-cat" onchange="filterDash()">
-        <option value="">All categories</option>
+        <option value="">Todas las categorías</option>
         <option>Transparente</option><option>Difusado</option><option>Blanco</option>
         <option>Greenpro</option><option>Mulch</option><option>Rafia</option>
         <option>Semilla</option><option>NUF</option><option>Poscosecha</option><option>Otros</option>
@@ -169,13 +169,13 @@
     </div>
     <table>
       <thead><tr>
-        <th>Product</th><th>Cat.</th><th>Total</th>
-        <th>Daily usage</th><th>Days left</th><th>Status</th>
-        <th>Min. order qty</th>
+        <th>Producto</th><th>Cat.</th><th>Total</th>
+        <th>Consumo diario</th><th>Días restantes</th><th>Estado</th>
+        <th>Cant. mín. pedido</th>
       </tr></thead>
       <tbody id="dash-tbody"></tbody>
     </table>
-    <div id="dash-empty" class="empty" style="display:none">No products found.</div>
+    <div id="dash-empty" class="empty" style="display:none">No se encontraron productos.</div>
   </div>
 </div>
 
@@ -183,33 +183,33 @@
 <div class="page" id="page-rollos">
   <div class="rollos-header">
     <div>
-      <h2>🎞 Plastic Rolls</h2>
+      <h2>🎞 Rollos de Plástico</h2>
       <div id="rollos-date" style="font-size:12px;color:#777;margin-top:2px"></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select class="filter-prod" id="rollos-prod-filter" onchange="loadRollos()">
-        <option value="">All products</option>
+        <option value="">Todos los productos</option>
       </select>
       <select class="filter-prod" id="rollos-tipo-filter" onchange="loadRollos()" style="min-width:140px">
-        <option value="">All types</option>
-        <option value="jumbo">Jumbo only</option>
-        <option value="restante">Remnants only</option>
-        <option value="danado">Damaged/Bi-color</option>
+        <option value="">Todos los tipos</option>
+        <option value="jumbo">Solo Jumbos</option>
+        <option value="restante">Solo Restantes</option>
+        <option value="danado">Dañados/Bicolor</option>
       </select>
     </div>
   </div>
   <div class="resumen-rollos" id="rollos-resumen"></div>
   <div class="toolbar" style="margin-bottom:10px">
-    <button class="btn btn-outline" id="btn-vista-resumen" onclick="setVista('resumen')" style="border-color:#1B5E20;color:#1B5E20">📊 Summary by product</button>
-    <button class="btn btn-outline" id="btn-vista-lista" onclick="setVista('lista')">📋 List of rolls</button>
+    <button class="btn btn-outline" id="btn-vista-resumen" onclick="setVista('resumen')" style="border-color:#1B5E20;color:#1B5E20">📊 Resumen por producto</button>
+    <button class="btn btn-outline" id="btn-vista-lista" onclick="setVista('lista')">📋 Lista de rollos</button>
   </div>
   <div id="vista-resumen">
     <table>
       <thead><tr>
-        <th>Product</th><th>Cat.</th>
-        <th>Jumbos</th><th>Remnants</th><th>Damaged</th>
-        <th>✅ Saleable</th><th>❌ Not saleable</th>
-        <th>Total meters</th><th>Saleable meters</th>
+        <th>Producto</th><th>Cat.</th>
+        <th>Jumbos</th><th>Restantes</th><th>Dañados</th>
+        <th>✅ Vendibles</th><th>❌ No vendibles</th>
+        <th>Total metros</th><th>Metros vendibles</th>
       </tr></thead>
       <tbody id="resumen-tbody"></tbody>
     </table>
@@ -217,21 +217,21 @@
   <div id="vista-lista" style="display:none">
     <table>
       <thead><tr>
-        <th>Product</th><th>Meters</th><th>Type</th><th>Saleable?</th>
+        <th>Producto</th><th>Metros</th><th>Tipo</th><th>¿Vendible?</th>
       </tr></thead>
       <tbody id="rollos-tbody"></tbody>
     </table>
   </div>
-  <div id="rollos-empty" class="empty" style="display:none">No rolls registered. Upload an Excel file first.</div>
+  <div id="rollos-empty" class="empty" style="display:none">No hay rollos registrados. Suba un archivo Excel primero.</div>
   <div class="note" id="rollos-note">ℹ️ Saleable = ≥ 100 meters and not damaged.</div>
 </div>
 
 <!-- UPLOAD -->
 <div class="page" id="page-upload">
   <div class="upload-box">
-    <h3>📂 Upload Excel report</h3>
+    <h3>📂 Subir reporte Excel</h3>
     <div class="form-row">
-      <label>Warehouse</label>
+      <label>Almacén</label>
       <select id="upload-wh">
         <option value="culiacan">Culiacán</option>
         <option value="cdmx">CDMX</option>
@@ -239,14 +239,14 @@
       </select>
     </div>
     <div class="form-row">
-      <label>Excel file (.xlsx)</label>
+      <label>Archivo Excel (.xlsx)</label>
       <input type="file" id="upload-file" accept=".xlsx,.xls">
     </div>
-    <button class="btn btn-green" onclick="doUpload()">Upload</button>
+    <button class="btn btn-green" onclick="doUpload()">Subir</button>
     <div id="upload-msg" style="margin-top:10px;font-size:13px"></div>
     <div class="info-box">
-      The system automatically extracts individual rolls from each plastic product.<br><br>
-      <strong>Excel structure:</strong> cols 1–23 = jumbos · col 28 = remnants · col 29 = bi-color/damaged
+      El sistema extrae automáticamente los rollos individuales de cada producto plástico.<br><br>
+      <strong>Estructura del Excel:</strong> cols 1–23 = jumbos · col 28 = restantes · col 29 = bicolor/dañados
     </div>
   </div>
 </div>
@@ -254,32 +254,32 @@
 <!-- SETTINGS -->
 <div class="page" id="page-config">
   <div class="config-box">
-    <h3>⚙️ Settings</h3>
+    <h3>⚙️ Configuración</h3>
 
     <!-- Min saleable roll length -->
     <div class="config-row">
       <div class="config-lbl">
-        <strong>Minimum meters for a saleable roll</strong>
-        <span>Rolls shorter than this will be marked as "Not saleable"</span>
+        <strong>Metros mínimos para un rollo vendible</strong>
+        <span>Los rollos más cortos serán marcados como "No vendible"</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <input type="number" class="config-input" id="cfg-min-metros" min="1" step="1" value="100">
-        <span style="font-size:12px;color:#777">meters</span>
+        <span style="font-size:12px;color:#777">metros</span>
       </div>
     </div>
     <div style="margin-top:4px;margin-bottom:20px">
-      <button class="btn btn-green" onclick="saveConfig()">Save</button>
+      <button class="btn btn-green" onclick="saveConfig()">Guardar</button>
       <div id="config-msg" style="margin-top:8px;font-size:12px"></div>
-      <div style="font-size:11px;color:#888;margin-top:6px">⚠️ This applies from the next Excel upload. Current data will not be recalculated automatically.</div>
+      <div style="font-size:11px;color:#888;margin-top:6px">⚠️ Aplica desde la próxima carga de Excel. Los datos actuales no se recalcularán automáticamente.</div>
     </div>
 
     <!-- Min order qty per product -->
-    <h3 style="margin-bottom:8px">Minimum order quantity per product</h3>
-    <p style="font-size:12px;color:#777;margin-bottom:10px">Set the minimum stock level that triggers a reorder alert on the dashboard.</p>
+    <h3 style="margin-bottom:8px">Cantidad mínima de pedido por producto</h3>
+    <p style="font-size:12px;color:#777;margin-bottom:10px">Define el stock mínimo que activa una alerta de reposición en el dashboard.</p>
     <div class="toolbar" style="margin-bottom:8px">
-      <input type="text" id="cfg-prod-search" placeholder="Search product..." oninput="filterCfgTable()" style="width:240px">
+      <input type="text" id="cfg-prod-search" placeholder="Buscar producto..." oninput="filterCfgTable()" style="width:240px">
       <select id="cfg-cat-filter" onchange="filterCfgTable()">
-        <option value="">All categories</option>
+        <option value="">Todas las categorías</option>
         <option>Transparente</option><option>Difusado</option><option>Blanco</option>
         <option>Greenpro</option><option>Mulch</option><option>Rafia</option>
         <option>Semilla</option><option>NUF</option><option>Poscosecha</option><option>Otros</option>
@@ -287,11 +287,11 @@
     </div>
     <table class="cfg-table">
       <thead><tr>
-        <th>Product</th><th>Category</th><th>Current stock</th><th>Min. order qty</th><th></th>
+        <th>Producto</th><th>Categoría</th><th>Stock actual</th><th>Cant. mín. pedido</th><th></th>
       </tr></thead>
       <tbody id="cfg-tbody"></tbody>
     </table>
-    <div id="cfg-empty" class="empty" style="display:none">No products found.</div>
+    <div id="cfg-empty" class="empty" style="display:none">No se encontraron productos.</div>
   </div>
 </div>
 
@@ -329,7 +329,7 @@ async function loadDashboard(){
       document.getElementById('dash-cards').innerHTML='';
       document.getElementById('dash-tbody').innerHTML='';
       document.getElementById('dash-empty').style.display='';
-      document.getElementById('dash-empty').textContent='No data. Upload an Excel file first.';
+      document.getElementById('dash-empty').textContent='Sin datos. Suba un archivo Excel primero.';
       return;
     }
     dashData=data.products;
@@ -349,7 +349,7 @@ async function loadDashboard(){
     const diff=Math.floor((new Date()-new Date(p[2],p[1]-1,p[0]))/86400000);
     document.getElementById('wh-dot').className='wh-dot '+(diff<=7?'fresh':'stale');
     filterDash();
-  }catch(e){document.getElementById('dash-loading').textContent='Error loading data.';}
+  }catch(e){document.getElementById('dash-loading').textContent='Error al cargar datos.';}
 }
 
 function filterDash(){
@@ -369,12 +369,12 @@ function filterDash(){
       <td><strong>${p.name}</strong>${belowMin?` <span class="badge b-low">⚠️ Bajo mínimo</span>`:''}</td>
       <td><span class="tag">${p.cat}</span></td>
       <td>${Number(p.total).toLocaleString()}</td>
-      <td>${p.avg_daily!=null?p.avg_daily+' /day':'—'}</td>
-      <td>${p.days!=null?p.days+' days':'—'}</td>
+      <td>${p.avg_daily!=null?p.avg_daily+' /día':'—'}</td>
+      <td>${p.days!=null?p.days+' días':'—'}</td>
       <td><span class="badge ${sb[p.status]}">${sl[p.status]}</span></td>
       <td>
         <input type="number" class="min-input" id="ms-${CSS.escape(p.name)}" value="${p.min_stock||0}" min="0" step="1">
-        <button class="save-min" onclick="saveMinStock('${p.name.replace(/'/g,"\\'")}')">Save</button>
+        <button class="save-min" onclick="saveMinStock('${p.name.replace(/'/g,"\\'")}')">Guardar</button>
         <span class="saved-flash" id="fl-${CSS.escape(p.name)}">✓</span>
       </td>
     </tr>`;
@@ -405,21 +405,21 @@ async function loadRollos(){
   try{
     const data=await(await fetch(url)).json();
     rollosData=data;
-    document.getElementById('rollos-date').textContent=data.report_date?`Data from ${data.report_date}`:'';
-    document.getElementById('rollos-note').textContent=`ℹ️ Saleable = ≥ ${data.min_metros_vendible} meters and not damaged.`;
+    document.getElementById('rollos-date').textContent=data.report_date?`Datos al ${data.report_date}`:'';
+    document.getElementById('rollos-note').textContent=`ℹ️ Vendible = ≥ ${data.min_metros_vendible} metros y no dañado.`;
     const allP=[...new Set(data.resumen.map(r=>r.product_name))].sort();
     const sel=document.getElementById('rollos-prod-filter');
     const cur=sel.value;
-    sel.innerHTML='<option value="">All products</option>'+allP.map(p=>`<option value="${p}" ${p===cur?'selected':''}>${p}</option>`).join('');
+    sel.innerHTML='<option value="">Todos los productos</option>'+allP.map(p=>`<option value="${p}" ${p===cur?'selected':''}>${p}</option>`).join('');
     let tj=0,tr=0,td=0,tv=0,tnv=0,tm=0;
     data.resumen.forEach(r=>{tj+=Number(r.rollos_jumbo||0);tr+=Number(r.rollos_restante||0);td+=Number(r.rollos_danado||0);tv+=Number(r.rollos_vendibles||0);tnv+=Number(r.rollos_no_vendibles||0);tm+=Number(r.metros_total||0);});
     document.getElementById('rollos-resumen').innerHTML=data.resumen.length===0?'':
       `<div class="res-card"><div class="res-val" style="color:#1565C0">${tj}</div><div class="res-lbl">🔵 Jumbos</div></div>
-       <div class="res-card"><div class="res-val" style="color:#F57F17">${tr}</div><div class="res-lbl">🟡 Remnants</div></div>
-       <div class="res-card"><div class="res-val" style="color:#880E4F">${td}</div><div class="res-lbl">🔴 Damaged</div></div>
-       <div class="res-card"><div class="res-val" style="color:#2E7D32">${tv}</div><div class="res-lbl">✅ Saleable</div></div>
-       <div class="res-card"><div class="res-val" style="color:#C62828">${tnv}</div><div class="res-lbl">❌ Not saleable</div></div>
-       <div class="res-card"><div class="res-val">${tm.toLocaleString()}</div><div class="res-lbl">📏 Total meters</div></div>`;
+       <div class="res-card"><div class="res-val" style="color:#F57F17">${tr}</div><div class="res-lbl">🟡 Restantes</div></div>
+       <div class="res-card"><div class="res-val" style="color:#880E4F">${td}</div><div class="res-lbl">🔴 Dañados</div></div>
+       <div class="res-card"><div class="res-val" style="color:#2E7D32">${tv}</div><div class="res-lbl">✅ Vendibles</div></div>
+       <div class="res-card"><div class="res-val" style="color:#C62828">${tnv}</div><div class="res-lbl">❌ No vendibles</div></div>
+       <div class="res-card"><div class="res-val">${tm.toLocaleString()}</div><div class="res-lbl">📏 Total metros</div></div>`;
     renderVista();
   }catch(e){document.getElementById('rollos-empty').style.display='';}
 }
@@ -460,8 +460,8 @@ function renderVista(){
     document.getElementById('rollos-tbody').innerHTML=data.rollos.map(r=>`<tr>
       <td style="font-size:12px;max-width:280px">${r.product_name}</td>
       <td><strong>${Number(r.metros).toLocaleString()} m</strong></td>
-      <td><span class="badge ${r.tipo==='jumbo'?'b-jumbo':r.tipo==='restante'?'b-rest':'b-dan'}">${r.tipo==='jumbo'?'🔵 Jumbo':r.tipo==='restante'?'🟡 Remnant':'🔴 Damaged'}</span></td>
-      <td><span class="badge ${r.vendible?'b-vend':'b-novend'}">${r.vendible?'✅ Yes':'❌ No'}</span></td>
+      <td><span class="badge ${r.tipo==='jumbo'?'b-jumbo':r.tipo==='restante'?'b-rest':'b-dan'}">${r.tipo==='jumbo'?'🔵 Jumbo':r.tipo==='restante'?'🟡 Restante':'🔴 Dañado'}</span></td>
+      <td><span class="badge ${r.vendible?'b-vend':'b-novend'}">${r.vendible?'✅ Sí':'❌ No'}</span></td>
     </tr>`).join('');
   }
 }
@@ -471,14 +471,14 @@ async function doUpload(){
   const file=document.getElementById('upload-file').files[0];
   const wh=document.getElementById('upload-wh').value;
   const msg=document.getElementById('upload-msg');
-  if(!file){msg.textContent='Please select a file.';return;}
-  msg.innerHTML='Uploading... <span class="spinner"></span>';
+  if(!file){msg.textContent='Seleccione un archivo.';return;}
+  msg.innerHTML='Subiendo... <span class="spinner"></span>';
   const fd=new FormData();fd.append('file',file);fd.append('warehouse',wh);
   try{
     const data=await(await fetch('/api/upload',{method:'POST',body:fd})).json();
-    if(data.ok)msg.innerHTML=`✅ Done. <strong>${data.products}</strong> products · <strong>${data.rollos}</strong> rolls · date: <strong>${data.date}</strong>`;
-    else msg.textContent='❌ Error: '+(data.error||'unknown');
-  }catch(e){msg.textContent='❌ Connection error.';}
+    if(data.ok)msg.innerHTML=`✅ Listo. <strong>${data.products}</strong> productos · <strong>${data.rollos}</strong> rollos · fecha: <strong>${data.date}</strong>`;
+    else msg.textContent='❌ Error: '+(data.error||'desconocido');
+  }catch(e){msg.textContent='❌ Error de conexión.';}
 }
 
 // ── Config ────────────────────────────────────────────────────────────────
@@ -492,13 +492,13 @@ async function loadConfig(){
 async function saveConfig(){
   const val=parseInt(document.getElementById('cfg-min-metros').value);
   const msg=document.getElementById('config-msg');
-  if(!val||val<1){msg.textContent='⚠️ Enter a valid number.';msg.className='msg-err';return;}
+  if(!val||val<1){msg.textContent='⚠️ Ingrese un número válido.';msg.className='msg-err';return;}
   try{
     const r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({min_metros_vendible:val})});
     const data=await r.json();
-    if(data.ok){msg.textContent=`✅ Saved. Minimum: ${val} meters.`;msg.className='msg-ok';}
-    else{msg.textContent='❌ Error saving.';msg.className='msg-err';}
-  }catch(e){msg.textContent='❌ Connection error.';msg.className='msg-err';}
+    if(data.ok){msg.textContent=`✅ Guardado. Mínimo: ${val} metros.`;msg.className='msg-ok';}
+    else{msg.textContent='❌ Error al guardar.';msg.className='msg-err';}
+  }catch(e){msg.textContent='❌ Error de conexión.';msg.className='msg-err';}
 }
 
 async function loadCfgProducts(){
@@ -525,7 +525,7 @@ function filterCfgTable(){
     <td><span class="tag">${p.cat}</span></td>
     <td>${Number(p.total).toLocaleString()}</td>
     <td><input type="number" min="0" step="1" value="${p.min_stock||0}" id="cfg-ms-${CSS.escape(p.name)}" style="width:80px;padding:4px 6px;border:1px solid #ccc;border-radius:4px;font-size:12px;text-align:center"></td>
-    <td><button class="save-min" onclick="saveCfgMinStock('${p.name.replace(/'/g,"\\'")}')">Save</button>
+    <td><button class="save-min" onclick="saveCfgMinStock('${p.name.replace(/'/g,"\\'")}')">Guardar</button>
         <span class="saved-flash" id="cfg-fl-${CSS.escape(p.name)}">✓</span></td>
   </tr>`).join('');
 }
