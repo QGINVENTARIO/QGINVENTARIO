@@ -90,13 +90,13 @@ def parse_restos(val):
 
 def get_cat(name):
     nl = name.lower()
-    if 'rafia' in nl: return 'Rafia'
-    if 'transparente' in nl: return 'Transparente'
-    if 'difus' in nl: return 'Difusado'
-    if 'blanco' in nl: return 'Blanco'
+    if 'rafia' in nl or 'raffia' in nl: return 'Rafia'
+    if 'transparente' in nl or 'transparent' in nl: return 'Transparente'
+    if 'difus' in nl or 'diffus' in nl: return 'Difusado'
+    if 'blanco' in nl or 'white' in nl: return 'Blanco'
     if 'greenpro' in nl: return 'Greenpro'
     if 'mulch' in nl or 'acolchado' in nl: return 'Mulch'
-    if 'semilla' in nl or 'seeds' in nl: return 'Semilla'
+    if 'semilla' in nl or 'seed' in nl: return 'Semilla'
     if 'nuf' in nl or 'water' in nl: return 'NUF'
     if 'prolong' in nl or 'bag' in nl: return 'Poscosecha'
     return 'Otros'
